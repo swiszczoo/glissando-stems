@@ -1,0 +1,37 @@
+:root {
+  font-family: Lato, system-ui, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #8cb2d9;
+  background-color: #0e1216;
+  background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8c3ZnDQogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iDQogICB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIg0KICAgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIg0KICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyINCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyINCiAgIGlkPSJzdmc4Ig0KICAgdmVyc2lvbj0iMS4xIg0KICAgdmlld0JveD0iMCAwIDM2NS4xNDQ2MiAyMDkuNzQ4OTUiDQogICBoZWlnaHQ9IjIwOS43NDg5NW1tIg0KICAgd2lkdGg9IjM2NS4xNDQ2Mm1tIj4NCiAgPGRlZnMNCiAgICAgaWQ9ImRlZnMyIiAvPg0KICA8bWV0YWRhdGENCiAgICAgaWQ9Im1ldGFkYXRhNSI+DQogICAgPHJkZjpSREY+DQogICAgICA8Y2M6V29yaw0KICAgICAgICAgcmRmOmFib3V0PSIiPg0KICAgICAgICA8ZGM6Zm9ybWF0PmltYWdlL3N2Zyt4bWw8L2RjOmZvcm1hdD4NCiAgICAgICAgPGRjOnR5cGUNCiAgICAgICAgICAgcmRmOnJlc291cmNlPSJodHRwOi8vcHVybC5vcmcvZGMvZGNtaXR5cGUvU3RpbGxJbWFnZSIgLz4NCiAgICAgICAgPGRjOnRpdGxlPjwvZGM6dGl0bGU+DQogICAgICA8L2NjOldvcms+DQogICAgPC9yZGY6UkRGPg0KICA8L21ldGFkYXRhPg0KICA8Zw0KICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1NS4zNTIwMiwxNC4yMDY1NSkiDQogICAgIGlkPSJsYXllcjEiPg0KICAgIDxwYXRoDQogICAgICAgZD0iTSAtNTUuMzUyMDIsLTE0LjIwNjU1IEMgOC40NDMwOTQxLC0xMC4zMTgxMDEgMTA1Ljc0MjE5LDExLjM5OTI0MyAxNTcuMjYxMywzNi42ODE1MDMgMjM3LjU5NDgxLDc2LjEwNDA3MSAyNzkuMzY2MzgsMTUxLjk4ODQ3IDMwOS43OTI2MSwxOTUuNTQyNCBWIC0xNC4yMDY1NSBaIg0KICAgICAgIHN0eWxlPSJmaWxsOiMxNDE4MWY7ZmlsbC1vcGFjaXR5OjE7c3Ryb2tlOm5vbmU7c3Ryb2tlLXdpZHRoOjAuMjY0NTgzMzJweDtzdHJva2UtbGluZWNhcDpidXR0O3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2Utb3BhY2l0eToxIg0KICAgICAgIGlkPSJwYXRoMzQ5NjYiIC8+DQogIDwvZz4NCjwvc3ZnPg==');
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-size: auto 50%;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+body * {
+  font-family: Lato, system-ui, Helvetica, Arial, sans-serif;
+}
+
+#root {
+  display: flex;
+  place-items: center;
+  min-height: 100vh;
+}
+
+@media (prefers-color-scheme: light) {}
