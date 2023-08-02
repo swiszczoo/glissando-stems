@@ -3,6 +3,7 @@ import logo from '../assets/logo.svg';
 
 import Button from '../components/Button';
 import Input from '../components/Input';
+import useSession from '../hooks/useSession';
 
 const Frame = styled('div')(({ theme }) => `
     margin: auto;
@@ -22,6 +23,8 @@ const PageTitle = styled('h1')(({ theme }) => ({
 }));
 
 function LoginRoute() {
+    const session = useSession();
+
     return (
         <Frame>
             <img src={logo} style={{width: '100%'}}/>

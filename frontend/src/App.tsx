@@ -5,6 +5,8 @@ import LoginRoute from './routes/Login';
 import NotFoundRoute from './routes/NotFound';
 
 import Page from './components/Page';
+import SessionContextProvider from './components/SessionContext';
+import MainRoute from './routes/Main';
 
 const theme = createTheme({
   palette: {
@@ -33,10 +35,13 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Routes>
-        <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute/></Page>} />
-        <Route path='*' Component={() => <Page name="Nie znaleziono"><NotFoundRoute/></Page>} />
-      </Routes>
+      <SessionContextProvider>
+        <Routes>
+          <Route path='' Component={() => <Page name="Ładowanie"><MainRoute /></Page>} />
+          <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute /></Page>} />
+          <Route path='*' Component={() => <Page name="Nie znaleziono"><NotFoundRoute /></Page>} />
+        </Routes>
+      </SessionContextProvider>
     </ThemeProvider>
   );
 }

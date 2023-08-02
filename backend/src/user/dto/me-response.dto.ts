@@ -1,6 +1,7 @@
 export class MeResponseDto {
   bandName: string;
-  login: string;
+  email: string;
   firstName: string;
   role: string;
+  username: string;
 }

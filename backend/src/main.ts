@@ -16,6 +16,7 @@ async function bootstrap() {
     ttl: 86400,
   });
 
+  app.setGlobalPrefix('api');
   app.use(
     session({
       secret: app.get(ConfigService).get('SESSION_SECRET') || 'abc',

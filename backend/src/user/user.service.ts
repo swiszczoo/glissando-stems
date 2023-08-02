@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { MeResponseDto } from './dto/me-response.dto';
+import { Band } from './entities/band.entity';
 import { User } from './entities/user.entity';
 
 import * as bcrypt from 'bcrypt';
@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserService {
   constructor(
+    @InjectRepository(Band) private bandRepository: Repository<Band>,
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
@@ -36,17 +37,17 @@ export class UserService {
     return now;
   }
 
-  async getUserData(userId: number): Promise<MeResponseDto> {
-    const account = await this.userRepository.findOneOrFail({
+  async getUserData(userId: number): Promise<User> {
+    return await this.userRepository.findOneOrFail({
       where: { id: userId },
       relations: ['band'],
     });
+  }
 
-    return {
-      bandName: account.band.name,
-      firstName: account.firstName,
-      login: account.login,
-      role: account.role,
-    };
+  async getBandData(bandId: number): Promise<Band> {
+    return await this.bandRepository.findOneOrFail({
+      where: { id: bandId },
+      relations: ['members'],
+    });
   }
 }

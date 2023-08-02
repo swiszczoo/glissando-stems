@@ -4,7 +4,6 @@ import { styled } from "@mui/system";
 const GlissandoInput = styled(Input)(({ theme }) => ({
     '& input': {
         width: '100%',
-        outline: 'none',
         border: 'none',
         padding: `${theme.spacing(2)} ${theme.spacing(3)}`,
         fontSize: 20,
@@ -12,6 +11,8 @@ const GlissandoInput = styled(Input)(({ theme }) => ({
         background: theme.palette.background.light,
         borderRadius: 100,
         boxSizing: 'border-box',
+        transition: '0.3s',
+        outline: 'solid 2px transparent',
         '&:focus': {
             outline: `solid 2px ${theme.palette.primary.dark}`,
         },
