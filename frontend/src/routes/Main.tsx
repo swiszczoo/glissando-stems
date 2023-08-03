@@ -1,7 +1,7 @@
 import { styled } from '@mui/system';
 import logo from '../assets/logo.svg';
 
-import useSession from "../hooks/useSession";
+import { useSession } from "../hooks/useSession";
 
 
 const Frame = styled('div')(({ theme }) => `
@@ -22,7 +22,8 @@ const LoadingBar = styled('div')(({ theme }) => `
     width: 100%;
     background-color: ${theme.palette.background.light};
     background: repeating-linear-gradient(45deg, ${theme.palette.primary.main} 0px, ${theme.palette.primary.main} ${theme.spacing(2)}, ${theme.palette.background.light} ${theme.spacing(2)}, ${theme.palette.background.light} ${theme.spacing(4)});
-    animation: stripesAnimation 10s linear infinite;
+    animation: stripesAnimation 7s linear infinite;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
 `);
 
 function MainRoute() {

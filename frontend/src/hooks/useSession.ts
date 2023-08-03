@@ -1,14 +1,18 @@
 import { useCallback, useContext, useEffect } from "react";
 import { SessionContext, SessionContextType } from "../components/SessionContext";
+import { useAxios } from "./useAxios";
 
-import axios, { AxiosResponse } from 'axios';
+import { AxiosInstance, AxiosResponse } from 'axios';
 import Cookies from 'js-cookie';
 
-const axiosInstance = new axios.Axios({ withCredentials: true });
+
 const sessionCookieName = 'connect.sid';
 const sessionDataUrl = '/api/user/me';
 
-function initSessionFromCookie(setContext: React.Dispatch<React.SetStateAction<SessionContextType>>): SessionContextType {
+function initSessionFromCookie(
+  axios: AxiosInstance, 
+  setContext: React.Dispatch<React.SetStateAction<SessionContextType>>
+): SessionContextType {
   const sessionId = Cookies.get(sessionCookieName);
   const emptySession = {
     sessionId: '',
@@ -23,7 +27,7 @@ function initSessionFromCookie(setContext: React.Dispatch<React.SetStateAction<S
   if (!sessionId) {
     return emptySession;
   } else {
-    axiosInstance.get(sessionDataUrl).then((res: AxiosResponse) => {
+    axios.get(sessionDataUrl).then((res: AxiosResponse) => {
       setContext({
         sessionId,
         bandName: res.data['bandName'],
@@ -42,16 +46,23 @@ function initSessionFromCookie(setContext: React.Dispatch<React.SetStateAction<S
   }
 }
 
-function useSession() {
+export function useSession() {
   const [ context, setContext ] = useContext(SessionContext);
+  const axios = useAxios();
   let currentContext = context;
 
   const invalidateSession = useCallback(() => {
-    setContext(() => initSessionFromCookie(setContext));
-  }, [setContext]);
+    setContext(() => initSessionFromCookie(axios, setContext));
+  }, [axios, setContext]);
+
+  const isLoggedIn = useCallback(() => {
+    if (!context) return false;
+    
+    return !context.pending && context.login.length > 0;
+  }, [context]);
 
   if (currentContext === undefined) {
-    currentContext = initSessionFromCookie(setContext);
+    currentContext = initSessionFromCookie(axios, setContext);
   }
 
   useEffect(() => {
@@ -62,8 +73,7 @@ function useSession() {
 
   return {
     ...currentContext,
-    invalidateSession
+    invalidateSession,
+    isLoggedIn,
   };
 }
-
-export default useSession;

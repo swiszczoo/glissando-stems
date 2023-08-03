@@ -13,7 +13,7 @@ async function bootstrap() {
   const store = new TypeormStore({
     cleanupLimit: 2,
     limitSubquery: false,
-    ttl: 86400,
+    ttl: 2592000,
   });
 
   app.setGlobalPrefix('api');

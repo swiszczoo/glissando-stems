@@ -2,11 +2,12 @@ import { Route, Routes } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/system';
 
 import LoginRoute from './routes/Login';
+import MainRoute from './routes/Main';
 import NotFoundRoute from './routes/NotFound';
 
+import AxiosContextProvider from './components/AxiosContext';
 import Page from './components/Page';
 import SessionContextProvider from './components/SessionContext';
-import MainRoute from './routes/Main';
 
 const theme = createTheme({
   palette: {
@@ -35,13 +36,15 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <SessionContextProvider>
-        <Routes>
-          <Route path='' Component={() => <Page name="Ładowanie"><MainRoute /></Page>} />
-          <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute /></Page>} />
-          <Route path='*' Component={() => <Page name="Nie znaleziono"><NotFoundRoute /></Page>} />
-        </Routes>
-      </SessionContextProvider>
+      <AxiosContextProvider>
+        <SessionContextProvider>
+          <Routes>
+            <Route path='' Component={() => <Page name="Ładowanie"><MainRoute /></Page>} />
+            <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute /></Page>} />
+            <Route path='*' Component={() => <Page name="Nie znaleziono"><NotFoundRoute /></Page>} />
+          </Routes>
+        </SessionContextProvider>
+      </AxiosContextProvider>
     </ThemeProvider>
   );
 }

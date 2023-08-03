@@ -3,6 +3,7 @@ import { styled } from "@mui/system";
 
 const GlissandoInput = styled(Input)(({ theme }) => ({
     '& input': {
+        margin: `${theme.spacing(1)} 0`,
         width: '100%',
         border: 'none',
         padding: `${theme.spacing(2)} ${theme.spacing(3)}`,

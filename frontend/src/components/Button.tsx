@@ -17,10 +17,11 @@ const GlissandoButton = styled(Button)(({ theme }) => ({
         background: theme.palette.primary.light,
         boxShadow: `0 0 10px ${theme.palette.primary.dark}`
     },
-    '&:hover:active': {
+    '&:not(:disabled):hover:active': {
         background: theme.palette.primary.dark,
     },
     '&:disabled': {
+        cursor: 'not-allowed',
         background: theme.palette.background.light,
         color: theme.palette.primary.main,
     }
