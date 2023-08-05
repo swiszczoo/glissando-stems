@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/system';
 import LoginRoute from './routes/Login';
 import MainRoute from './routes/Main';
 import NotFoundRoute from './routes/NotFound';
+import SongListRoute from './routes/SongList';
 
 import AxiosContextProvider from './components/AxiosContext';
 import Page from './components/Page';
@@ -28,6 +29,7 @@ const theme = createTheme({
       main: '#0e1216',
       dark: '#000000',
       light: '#182125',
+      hover: '#212d33',
       contrastText: '#8cb2d9',
     }
   }
@@ -41,6 +43,7 @@ function App() {
           <Routes>
             <Route path='' Component={() => <Page name="Ładowanie"><MainRoute /></Page>} />
             <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute /></Page>} />
+            <Route path='songs' Component={() => <Page name="Lista utworów"><SongListRoute /></Page>} />
             <Route path='*' Component={() => <Page name="Nie znaleziono"><NotFoundRoute /></Page>} />
           </Routes>
         </SessionContextProvider>

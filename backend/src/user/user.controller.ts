@@ -1,7 +1,8 @@
-import { SessionData } from '../session';
-
 import { Body, Get, Controller, Post, Session } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { promisify } from 'util';
+
+import { SessionData } from '../session';
 
 import { UserExceptions } from './user.exceptions';
 import { UserService } from './user.service';
@@ -11,14 +12,16 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { MeBandResponseDto } from './dto/me-band-response.dto';
 import { MeResponseDto } from './dto/me-response.dto';
 
-import { Role } from 'src/common/role.enum';
-import { Roles } from 'src/common/roles.decorator';
+import { Role } from '../common/role.enum';
+import { Roles } from '../common/roles.decorator';
+import { Config } from '../config';
 
 @Controller('user')
 export class UserController {
   constructor(
     private exceptions: UserExceptions,
     private service: UserService,
+    private configService: ConfigService<Config>,
   ) {}
 
   @Post('login')
@@ -71,6 +74,7 @@ export class UserController {
         firstName: userData.firstName,
         role: userData.role,
         username: userData.login,
+        stemLocationPrefix: this.configService.get('STEM_URL_PREFIX'),
       };
     } catch {
       throw this.exceptions.UNKNOWN_ERROR;

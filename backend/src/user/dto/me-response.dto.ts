@@ -3,5 +3,6 @@ export class MeResponseDto {
   email: string;
   firstName: string;
   role: string;
+  stemLocationPrefix: string;
   username: string;
 }

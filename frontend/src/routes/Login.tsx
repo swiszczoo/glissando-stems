@@ -26,10 +26,18 @@ const PageTitle = styled('h1')(({ theme }) => ({
     textAlign: 'center',
 }));
 
-const LoginError = styled('p')(({ theme }) => ({
+const LoginError = styled('p')(() => ({
     color: '#f09585',
     letterSpacing: 0.4,
 }));
+
+const getNextRoute = (session: { routeAfterLogin?: string | undefined }) => {
+    return (
+        session.routeAfterLogin?.length === 0 
+        ? '/' 
+        : (session.routeAfterLogin || '/')
+    );
+};
 
 function LoginRoute() {
     const session = useSession();
@@ -43,7 +51,7 @@ function LoginRoute() {
 
     useEffect(() => {
         if (session.isLoggedIn()) {
-            navigate('/', {
+            navigate(getNextRoute(session), {
                 replace: true
             });
         }
@@ -67,11 +75,10 @@ function LoginRoute() {
 
             if (res.data['success']) {
                 session.invalidateSession();
-                navigate('/', {
+                navigate(getNextRoute(session), {
                     replace: true
                 });
             } else {
-                console.log('nie yay');
                 setLoginError('Nieznany błąd serwera');
             }
         }).catch((error) => {
