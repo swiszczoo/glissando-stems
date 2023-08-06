@@ -34,6 +34,23 @@ body * {
   min-height: 100vh;
 }
 
+::selection {
+  background: #8cb2d9;
+  color: #0e1216;
+}
+
+*::-webkit-scrollbar {
+  width: 16px;
+  background: #182125;
+  border-radius: 20px;
+}
+
+*::-webkit-scrollbar-thumb {
+  width: 16px;
+  background: #8cb2d9;
+  border-radius: 20px;
+}
+
 @keyframes stripesAnimation {
   from {
     background-position: 0px 0px;

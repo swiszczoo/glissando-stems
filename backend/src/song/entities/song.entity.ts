@@ -29,7 +29,10 @@ export class Song {
   @Column('float', { nullable: false })
   public bpm: number;
 
-  @Column('int', { nullable: true })
+  @Column('simple-json', { nullable: false })
+  public form: { bar: number; name: string }[];
+
+  @Column('int', { nullable: false })
   public samples: number;
 
   @OneToMany(() => Stem, (stem) => stem.song)

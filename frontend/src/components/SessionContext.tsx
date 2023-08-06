@@ -88,7 +88,6 @@ function SessionContextLoginTeleport() {
 
 function SessionContextProvider(props: React.PropsWithChildren<object>) {
   const state = useState<SessionContextType>(undefined);
-  console.log(state);
 
   return (
     <SessionContext.Provider value={state}>

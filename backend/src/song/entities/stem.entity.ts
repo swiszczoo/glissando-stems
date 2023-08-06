@@ -7,7 +7,9 @@ export class Stem {
   @PrimaryGeneratedColumn('increment')
   public id: number;
 
-  @ManyToOne(() => Song, (song) => song.stems)
+  @ManyToOne(() => Song, (song) => song.stems, {
+    onDelete: 'CASCADE',
+  })
   public song: Song;
 
   @Column('varchar', { nullable: false, length: 16 })

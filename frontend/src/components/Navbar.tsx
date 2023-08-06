@@ -1,5 +1,6 @@
 import { styled } from "@mui/system";
 
+import { useAxios } from "../hooks/useAxios";
 import { useSession } from "../hooks/useSession";
 
 import Avatar from "./Avatar";
@@ -34,13 +35,26 @@ interface NavbarProps {
 
 function Navbar(props: React.PropsWithChildren<NavbarProps>) {
   const session = useSession();
+  const axios = useAxios();
+
+  const handleLogout = () => {
+    axios.post('/api/user/logout').then(() => {
+      session.invalidateSession();
+    }).catch(() => {
+      session.invalidateSession();
+    });
+  };
   
   return (
     <NavbarFrame>
       <NavbarTitle>{props.title}</NavbarTitle>
       { !props.customSeparator && <NavbarSeparator /> }
       { props.children }
-      <Avatar userFirstName={session.firstName || ''} userEmail={session.email || ''}/>
+      <Avatar 
+        userFirstName={session.firstName || ''} 
+        userEmail={session.email || ''}
+        username={session.login || ''} 
+        onLogout={handleLogout} />
     </NavbarFrame>
   );
 }

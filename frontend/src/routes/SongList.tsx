@@ -1,5 +1,9 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AxiosError } from 'axios';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AddIcon from '@mui/icons-material/Add';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import DeleteForeverRoundedIcon from '@mui/icons-material/DeleteForeverRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded';
@@ -8,15 +12,15 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { styled } from '@mui/system';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+import Input from '../components/Input';
 import LoadingBar from '../components/LoadingBar';
+import Modal from '../components/Modal';
 import Navbar from "../components/Navbar";
 import { GreenButton, YellowButton, RedButton } from "../components/NavbarButton";
 import SolidBackgroundFrame from "../components/SolidBackgroundFrame";
 
 import { useAxios } from '../hooks/useAxios';
 import { useSession } from "../hooks/useSession";
-import { AxiosError } from 'axios';
-import { useEffect } from 'react';
 
 const MainSection = styled('section')(({ theme }) => ({
   boxSizing: 'border-box',
@@ -73,6 +77,9 @@ interface SongProps {
   bpm: number;
   stemCount: number;
   duration: number;
+  onPlay?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 interface SongResponse extends SongProps {
@@ -96,14 +103,169 @@ function Song(props: SongProps) {
         <span>{time}</span>
         <span></span>
         <HourglassTopRoundedIcon titleAccess='Tempo' />
-        <span>{props.bpm.toFixed(2)} BPM</span>
+        <span>{props.bpm.toFixed(3)} BPM</span>
       </SongDetails>
       <SongActions>
-        <GreenButton><PlayArrowRoundedIcon />&nbsp;Odtwórz</GreenButton>
-        <YellowButton><EditRoundedIcon />&nbsp;Edytuj</YellowButton>
-        <RedButton><DeleteForeverRoundedIcon />&nbsp;Usuń</RedButton>
+        <GreenButton onClick={props.onPlay} disabled={props.stemCount < 1}>
+          <PlayArrowRoundedIcon />&nbsp;Odtwarzacz
+        </GreenButton>
+        <YellowButton onClick={props.onEdit}>
+          <EditRoundedIcon />&nbsp;Edytor
+        </YellowButton>
+        <RedButton onClick={props.onDelete}>
+          <DeleteForeverRoundedIcon />&nbsp;Usuń
+        </RedButton>
       </SongActions>
     </SongFrame>
+  );
+}
+
+const TempoFrame = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'row',
+  flexWrap: 'nowrap',
+  alignItems: 'baseline',
+  justifyContent: 'center',
+  '*': {
+    marginRight: theme.spacing(0.5)
+  },
+  '* input': {
+    width: theme.spacing(4),
+    padding: `${theme.spacing(1.5)} ${theme.spacing(0)}`,
+    fontWeight: 700,
+    textAlign: 'center',
+  }
+}));
+
+interface ModalProps {
+  open?: boolean;
+  onCancel?: () => void;
+}
+
+function AddSongModal(props: ModalProps) {
+  const [ title, setTitle ] = useState('');
+  const [ tempo, setTempo ] = useState('120.000');
+  const [ processing, setProcessing ] = useState(false);
+  const axios = useAxios();
+  const session = useSession();
+  const queryClient = useQueryClient();
+
+  const handleTempoKeyDown = (charIdx: number, event: React.KeyboardEvent<HTMLInputElement>) => {
+    const nextInputId = `bpm${charIdx}`;
+    const digits = '0123456789';
+    const digit = digits.indexOf(event.key);
+
+    if (digit >= 0) {
+      setTempo((currentTempo) => currentTempo.substring(0, charIdx) + digit + currentTempo.substring(charIdx + 1));
+      const nextInput = document.querySelector<HTMLInputElement>(`div[data-focusafter=${nextInputId}] > input`);
+      nextInput?.focus();
+      setTimeout(() => nextInput?.select(), 0);
+    }
+  };
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(event.target.value.substring(0, 255));
+  };
+
+  const valid = title.length > 0 && tempo >= '040.000' && !processing;
+
+  const handleAccept = () => {
+    if (!valid) return;
+    setProcessing(true);
+
+    axios.post('/api/songs', {
+      title: title,
+      bpm: parseFloat(tempo),
+      form: [],
+    }).then(() => {
+      queryClient.invalidateQueries(['songs']);
+      setProcessing(false);
+
+      if (props.onCancel) props.onCancel();
+    }).catch((error: AxiosError) => {
+      setProcessing(false);
+
+      if (error.response) {
+        if (error.response.status === 403) {
+          session.invalidateSession();
+        } else {
+          console.error(error);
+          alert((error.response.data as Record<string, string>)['message']);
+        }
+      } else {
+        console.error(error);
+        alert('Nie można dodać utworu! Wystąpił nieznany błąd.');
+      }
+    });
+  };
+
+  return (
+    <Modal open={props.open} onBlur={props.onCancel} title='Dodaj nowy utwór' buttons={() =>
+      <>
+        <RedButton onClick={props.onCancel}><CloseRoundedIcon />&nbsp;Anuluj</RedButton>&nbsp;&nbsp;
+        <GreenButton onClick={handleAccept} disabled={!valid}>
+          <CheckRoundedIcon />{ processing ? '\u2022 \u2022 \u2022' : <>&nbsp;Zaakceptuj</> }
+        </GreenButton>
+      </>
+    }>
+      <Input value={title} placeholder='Tytuł utworu' onChange={handleTitleChange}/>
+      <TempoFrame>
+        <span>Tempo:&nbsp;&nbsp;</span>
+        <Input onKeyDown={handleTempoKeyDown.bind(null, 0)} value={tempo[0]}></Input>
+        <Input data-focusafter='bpm0' onKeyDown={handleTempoKeyDown.bind(null, 1)} value={tempo[1]}></Input>
+        <Input data-focusafter='bpm1' onKeyDown={handleTempoKeyDown.bind(null, 2)} value={tempo[2]}></Input>
+        <span style={{ fontWeight: 700 }}>.</span>
+        <Input data-focusafter='bpm2' onKeyDown={handleTempoKeyDown.bind(null, 4)} value={tempo[4]}></Input>
+        <Input data-focusafter='bpm4' onKeyDown={handleTempoKeyDown.bind(null, 5)} value={tempo[5]}></Input>
+        <Input data-focusafter='bpm5' onKeyDown={handleTempoKeyDown.bind(null, 6)} value={tempo[6]}></Input>
+        <span style={{ fontWeight: 700 }}>BPM</span>
+      </TempoFrame>
+    </Modal>
+  );
+}
+
+function DeleteSongModal(props: ModalProps & { songId: number, songTitle: string }) {
+  const [ processing, setProcessing ] = useState(false);
+  const axios = useAxios();
+  const session = useSession();
+  const queryClient = useQueryClient();
+
+  const handleDelete = () => {
+    setProcessing(true);
+
+    axios.delete(`/api/songs/${props.songId}`).then(() => {
+      queryClient.invalidateQueries(['songs']);
+      setProcessing(false);
+
+      if (props.onCancel) props.onCancel();
+    }).catch((error: AxiosError) => {
+      setProcessing(false);
+
+      if (error.response) {
+        if (error.response.status === 403) {
+          session.invalidateSession();
+        } else {
+          console.error(error);
+          alert((error.response.data as Record<string, string>)['message']);
+        }
+      } else {
+        console.error(error);
+        alert('Nie można dodać utworu! Wystąpił nieznany błąd.');
+      }
+    });
+  };
+
+  return (
+    <Modal open={props.open} onBlur={props.onCancel} title='Potwierdź usunięcie utworu' buttons={() =>
+      <>
+        <RedButton onClick={props.onCancel}><CloseRoundedIcon />&nbsp;Nie</RedButton>&nbsp;&nbsp;
+        <GreenButton onClick={handleDelete}>
+          <CheckRoundedIcon /> { processing ? '\u2022 \u2022 \u2022' : <>&nbsp;Tak</> }
+        </GreenButton>
+      </>
+    }>
+      <p>Czy na pewno chcesz usunąć utwór pt. <strong>"{ props.songTitle }"</strong>? Tej operacji nie można cofnąć!</p>
+    </Modal>
   );
 }
 
@@ -115,6 +277,20 @@ function SongListRoute() {
     return data;
   }, { staleTime: 60000 });
   const session = useSession();
+  const modalKey = useRef<number>(1);
+  const [ addModalOpen, setAddModalOpen ] = useState(false);
+  const [ deleteModalSongId, setDeleteModalSongId ] = useState<number | undefined>(undefined);
+  const deleteModalSongTitle = useMemo(() => {
+    if (deleteModalSongId === undefined) return '';
+
+    for (const entry of data) {
+      if (entry.id === deleteModalSongId) {
+        return entry.title;
+      }
+    }
+
+    return '';
+  }, [data, deleteModalSongId]);
   
   useEffect(() => {
     if ((error as AxiosError)?.response?.status === 403) {
@@ -122,31 +298,60 @@ function SongListRoute() {
     }
   }, [error, session]);
 
+  const handleAddModalOpen = () => {
+    ++modalKey.current;
+    setAddModalOpen(true);
+  };
+
+  const handleAddModalClose = () => {
+    setAddModalOpen(false);
+  }
+
   const handleReload = () => {
     queryClient.invalidateQueries(['songs']);
+  };
+
+  const handleSongDelete = (songId: number) => {
+    setDeleteModalSongId(songId);
+  };
+
+  const handleDeleteModalClose = () => {
+    setDeleteModalSongId(undefined);
   };
 
   return (
     <SolidBackgroundFrame>
       <Navbar title={session.bandName || ''}>
-        <GreenButton><AddIcon />&nbsp;Dodaj nowy utwór</GreenButton>
+        <GreenButton onClick={handleAddModalOpen}><AddIcon />&nbsp;Dodaj nowy utwór</GreenButton>
         <span style={{ width: 32 }} />
       </Navbar>
       <MainSection>
         <MainHeader>Lista utworów</MainHeader>
         { status === 'loading' && <LoadingBar/> }
         { status === 'error' && <RedButton onClick={handleReload}>Wczytywanie danych nie powiodło się. Ponów próbę.</RedButton> }
-        { status === 'success' && data.map((element: SongResponse) => (
-          <Song 
+        { status === 'success' && data.toReversed().map((element: SongResponse) => (
+          <Song
             key={element.id} 
             title={element.title} 
             slug={element.slug} 
             stemCount={element.stemCount} 
             duration={element.duration}
-            bpm={element.bpm} />
+            bpm={element.bpm}
+            onDelete={handleSongDelete.bind(null, element.id)} />
           )
         )}
+        { status === 'success' && data.length === 0 && <>Obecnie nie ma w systemie żadnych utworów!</>}
       </MainSection>
+      <AddSongModal 
+        key={modalKey.current} 
+        open={addModalOpen} 
+        onCancel={handleAddModalClose} />
+      <DeleteSongModal 
+        key={modalKey.current} 
+        open={deleteModalSongId !== undefined} 
+        songId={deleteModalSongId!} 
+        songTitle={deleteModalSongTitle} 
+        onCancel={handleDeleteModalClose} />
     </SolidBackgroundFrame>
   );
 }

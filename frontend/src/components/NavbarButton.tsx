@@ -8,7 +8,7 @@ const makeNavbarButton = (textColor: string) => styled(Button)(({ theme }) => ({
     outline: 'none',
     color: textColor,
     fontSize: 15,
-    padding: `${theme.spacing(1)} ${theme.spacing(2)}`,
+    padding: `${theme.spacing(1)} ${theme.spacing(3)}`,
     borderRadius: 100,
     fontWeight: 700,
     transition: '0.1s',
@@ -17,6 +17,7 @@ const makeNavbarButton = (textColor: string) => styled(Button)(({ theme }) => ({
     placeContent: 'center',
     placeItems: 'center',
     whiteSpace: 'nowrap',
+    userSelect: 'none',
     '&:not(:disabled):hover, &:focus': {
         background: `${textColor}40`,
         boxShadow: `0 0 10px ${textColor}40`
@@ -28,8 +29,7 @@ const makeNavbarButton = (textColor: string) => styled(Button)(({ theme }) => ({
     },
     '&:disabled': {
         cursor: 'not-allowed',
-        background: theme.palette.background.light,
-        color: theme.palette.primary.main,
+        color: theme.palette.primary.dark,
     },
     '& *': {
       fontSize: 20,
@@ -39,4 +39,4 @@ const makeNavbarButton = (textColor: string) => styled(Button)(({ theme }) => ({
 export const NormalButton = makeNavbarButton('#8cb2d9');
 export const GreenButton = makeNavbarButton('#0fad0f');
 export const YellowButton = makeNavbarButton('#acad0f');
-export const RedButton = makeNavbarButton('#ad180f');
+export const RedButton = makeNavbarButton('#d13b32');

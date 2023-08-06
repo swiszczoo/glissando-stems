@@ -1,4 +1,13 @@
-import { Controller, Get, Param, ParseIntPipe, Session } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Session,
+} from '@nestjs/common';
 
 import { SessionData } from '../session';
 
@@ -8,6 +17,7 @@ import { SongService } from './song.service';
 import { Role } from '../common/role.enum';
 import { Roles } from '../common/roles.decorator';
 
+import { SongCreateDto } from './dto/song-create.dto';
 import { SongResponseDto } from './dto/song-response.dto';
 
 @Controller('songs')
@@ -64,5 +74,48 @@ export class SongController {
       this.service.samplesToSeconds.bind(this.service),
       song,
     );
+  }
+
+  @Post()
+  @Roles(Role.User, Role.Admin)
+  async create(
+    @Session() session: SessionData,
+    @Body() params: SongCreateDto,
+  ): Promise<SongResponseDto> {
+    const song = await this.service.createSongByBand(session.bandId, params);
+
+    return SongResponseDto.entityToDto(
+      this.service.samplesToSeconds.bind(this.service),
+      song,
+    );
+  }
+
+  @Delete(':id')
+  @Roles(Role.User, Role.Admin)
+  async deleteOne(
+    @Session() session: SessionData,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    const count = await this.service.deleteSongByBand(session.bandId, id);
+
+    if (count != 1) {
+      throw this.exceptions.NOT_FOUND;
+    }
+  }
+
+  @Delete('bySlug/:slug')
+  @Roles(Role.User, Role.Admin)
+  async deleteOneBySlug(
+    @Session() session: SessionData,
+    @Param('slug') slug: string,
+  ): Promise<void> {
+    const count = await this.service.deleteSongByBandBySlug(
+      session.bandId,
+      slug,
+    );
+
+    if (count != 1) {
+      throw this.exceptions.NOT_FOUND;
+    }
   }
 }
