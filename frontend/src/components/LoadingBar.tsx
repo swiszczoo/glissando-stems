@@ -7,6 +7,7 @@ const LoadingBar = styled('div')(({ theme }) => `
     width: 100%;
     background-color: ${theme.palette.background.light};
     background: repeating-linear-gradient(45deg, ${theme.palette.primary.main} 0px, ${theme.palette.primary.main} ${theme.spacing(2)}, ${theme.palette.background.light} ${theme.spacing(2)}, ${theme.palette.background.light} ${theme.spacing(4)});
+    background-size: calc(100% + 453px) 100%;
     animation: stripesAnimation 7s linear infinite;
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
 `);

@@ -9,14 +9,15 @@ import { useSession } from "../hooks/useSession";
 
 
 const Frame = styled('div')(({ theme }) => `
-    margin: auto;
-    width: 500px;
-    max-width: 90vw;
-    padding: ${theme.spacing(4)};
-    border-radius: ${theme.spacing(2)};
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  box-sizing: border-box;
+  margin: auto;
+  width: 500px;
+  max-width: 95vw;
+  padding: ${theme.spacing(4)};
+  border-radius: ${theme.spacing(2)};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `);
 
 function MainRoute() {

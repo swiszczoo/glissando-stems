@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { AxiosError } from 'axios';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AddIcon from '@mui/icons-material/Add';
@@ -277,6 +278,7 @@ function SongListRoute() {
     return data;
   }, { staleTime: 60000 });
   const session = useSession();
+  const navigate = useNavigate();
   const modalKey = useRef<number>(1);
   const [ addModalOpen, setAddModalOpen ] = useState(false);
   const [ deleteModalSongId, setDeleteModalSongId ] = useState<number | undefined>(undefined);
@@ -311,6 +313,15 @@ function SongListRoute() {
     queryClient.invalidateQueries(['songs']);
   };
 
+  const handleSongEdit = (songId: number) => {
+    for (const entry of data) {
+      if (entry.id === songId) {
+        navigate(`edit/${entry.slug}`);
+        return;
+      }
+    }
+  };
+
   const handleSongDelete = (songId: number) => {
     setDeleteModalSongId(songId);
   };
@@ -337,6 +348,7 @@ function SongListRoute() {
             stemCount={element.stemCount} 
             duration={element.duration}
             bpm={element.bpm}
+            onEdit={handleSongEdit.bind(null, element.id)}
             onDelete={handleSongDelete.bind(null, element.id)} />
           )
         )}
@@ -347,7 +359,7 @@ function SongListRoute() {
         open={addModalOpen} 
         onCancel={handleAddModalClose} />
       <DeleteSongModal 
-        key={modalKey.current} 
+        key={-modalKey.current} 
         open={deleteModalSongId !== undefined} 
         songId={deleteModalSongId!} 
         songTitle={deleteModalSongTitle} 
