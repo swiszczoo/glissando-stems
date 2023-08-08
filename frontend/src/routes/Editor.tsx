@@ -3,7 +3,6 @@ import Logo from '../assets/logo.svg';
 
 import LoadingBar from "../components/LoadingBar";
 import SolidBackgroundFrame from "../components/SolidBackgroundFrame";
-import WasmContextProvider from "../components/WasmContext";
 
 import useNative from "../hooks/useNative";
 
@@ -43,9 +42,7 @@ function EditorContent() {
 
 function EditorRoute() {
   return (
-    <WasmContextProvider>
-      <EditorContent/>
-    </WasmContextProvider>
+    <EditorContent/>
   );
 }
 

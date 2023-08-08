@@ -1,5 +1,4 @@
 import { createContext, useMemo, useRef, useState } from 'react';
-import Module from '../../native/build/glissando-editor';
 
 export const WasmContext = createContext<WasmContextType>({
   module: undefined,
@@ -18,7 +17,15 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
   const contextValue: WasmContextType = useMemo(() => {
     const loadModule = () => {
       moduleIsLoading.current = true;
-      Module().then((module: EmscriptenModule) => setInstance(module));
+      const moduleScript = document.createElement('script');
+      moduleScript.type = 'text/javascript';
+      moduleScript.src = '/native/build/glissando-editor.js';
+      window._wasmInitialized = () => {
+        setInstance(Module);
+        window._wasmInitialized = undefined;
+      };
+      
+      document.body.appendChild(moduleScript);
     };
 
     return {
