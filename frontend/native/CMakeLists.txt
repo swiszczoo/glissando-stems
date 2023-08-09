@@ -4,7 +4,7 @@ project(glissandostems)
 option(GS_WASM_PATH_PREFIX DEFAULT "")
 
 set(EXECUTABLE_NAME glissando-editor)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB_RECURSE C_SOURCES src/*.c)
 file(GLOB_RECURSE CXX_SOURCES src/*.cpp)

@@ -1,41 +1,62 @@
 #include <audio-worklet.h>
+
+#include <audio-buffer.h>
 #include <emscripten/webaudio.h>
 
-#include <iostream>
-
 uint8_t audio_thread_stack[4096];
-static const int AUDIO_CHUNK_SAMPLES = 128;
 static const char* WORKLET_NODE_NAME = "glissando-processor";
 static int OUTPUT_CHANNEL_COUNT = 2; // Stereo output
 
-float test = 0.1;
 
-struct audio_chunk {
-    float left_channel[AUDIO_CHUNK_SAMPLES];
-    float right_channel[AUDIO_CHUNK_SAMPLES];
-};
-
-EM_BOOL audio_process(int num_inputs, const AudioSampleFrame *inputs,
-                      int num_outputs, AudioSampleFrame *outputs,
-                      int num_params, const AudioParamFrame *params,
-                      void *user_data)
+AudioWorklet::AudioWorklet() 
 {
-    audio_chunk* output = reinterpret_cast<audio_chunk*>(outputs[0].data);
-    for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
-        output->left_channel[i] = 0;
-        output->right_channel[i] = 0;
+    EmscriptenWebAudioCreateAttributes options = {
+        .latencyHint = "interactive",
+        .sampleRate = 44100
+    };
+
+    EMSCRIPTEN_WEBAUDIO_T context = emscripten_create_audio_context(&options);
+    _audio_context = context;
+
+    emscripten_start_wasm_audio_worklet_thread_async(
+        context, audio_thread_stack, sizeof(audio_thread_stack), 
+        &AudioWorklet::callback_audio_thread_initialized, this);
+}
+
+AudioWorklet::~AudioWorklet()
+{
+    emscripten_destroy_audio_context(_audio_context);
+}
+
+void AudioWorklet::process_audio(audio_chunk* output_buffer)
+{
+    if (_audio_buffer && (*_audio_buffer) >> (*output_buffer)) {
+        return;
     }
 
-    return EM_TRUE;
+    for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
+        output_buffer->left_channel[i] = 0;
+        output_buffer->right_channel[i] = 0;
+    }
 }
 
-EM_BOOL OnCanvasClick(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData)
+void AudioWorklet::callback_audio_thread_initialized(
+    EMSCRIPTEN_WEBAUDIO_T audio_context, EM_BOOL success, void *user_data)
 {
-  std::cout << "Click!" << std::endl;
-  return EM_FALSE;
+    if (!success) return;
+    
+    WebAudioWorkletProcessorCreateOptions opts = {
+        .name = WORKLET_NODE_NAME,
+        .numAudioParams = 0,
+    };
+
+    emscripten_create_wasm_audio_worklet_processor_async(
+        audio_context, &opts, 
+        &AudioWorklet::callback_audio_worklet_processor_created, user_data);
 }
 
-static void audio_worklet_processor_created(EMSCRIPTEN_WEBAUDIO_T audio_context, EM_BOOL success, void *user_data)
+void AudioWorklet::callback_audio_worklet_processor_created(
+    EMSCRIPTEN_WEBAUDIO_T audio_context, EM_BOOL success, void *user_data)
 {
     if (!success) return;
 
@@ -46,32 +67,40 @@ static void audio_worklet_processor_created(EMSCRIPTEN_WEBAUDIO_T audio_context,
     };
 
     EMSCRIPTEN_AUDIO_WORKLET_NODE_T wasm_audio_worklet = emscripten_create_wasm_audio_worklet_node(
-        audio_context, WORKLET_NODE_NAME, &options, audio_process, nullptr);
+        audio_context, WORKLET_NODE_NAME, &options, 
+        &AudioWorklet::callback_process_audio, user_data);
 
+    // Setup audio path with limiter
     EM_ASM({
-        emscriptenGetAudioObject($0).connect(emscriptenGetAudioObject($1).destination);
-        window.audioContext = emscriptenGetAudioObject($1);
+
+        const audioCtx = emscriptenGetAudioObject($1);
+
+        // Configure limiter
+        const limiter = new DynamicsCompressorNode(audioCtx);
+        limiter.threshold.setValueAtTime(-1, audioCtx.currentTime);
+        limiter.knee.setValueAtTime(0, audioCtx.currentTime);
+        limiter.ratio.setValueAtTime(20, audioCtx.currentTime);
+        limiter.attack.setValueAtTime(0.002, audioCtx.currentTime);
+        limiter.release.setValueAtTime(0.025, audioCtx.currentTime);
+
+        emscriptenGetAudioObject($0).connect(limiter);
+        limiter.connect(audioCtx.destination);
+
+        window.audioContext = audioCtx;
+        console.info(`Output sample rate is ${window.audioContext.sampleRate} Hz`);
+
     }, wasm_audio_worklet, audio_context);
-
-    emscripten_set_click_callback("body", NULL, 0, OnCanvasClick);
 }
 
-static void audio_thread_initialized(EMSCRIPTEN_WEBAUDIO_T audio_context, EM_BOOL success, void *user_data)
+EM_BOOL AudioWorklet::callback_process_audio(int num_inputs, const AudioSampleFrame *inputs,
+                      int num_outputs, AudioSampleFrame *outputs,
+                      int num_params, const AudioParamFrame *params,
+                      void *user_data)
 {
-    if (!success) return;
+    AudioWorklet* instance = reinterpret_cast<AudioWorklet*>(user_data);
+    audio_chunk* output_buffer = reinterpret_cast<audio_chunk*>(outputs[0].data);
     
-    WebAudioWorkletProcessorCreateOptions opts = {
-        .name = WORKLET_NODE_NAME,
-        .numAudioParams = 0,
-    };
-
-    emscripten_create_wasm_audio_worklet_processor_async(
-        audio_context, &opts, audio_worklet_processor_created, nullptr);
+    instance->process_audio(output_buffer);
+    return EM_TRUE;
 }
 
-void test_audio_worklet() {
-    EMSCRIPTEN_WEBAUDIO_T context = emscripten_create_audio_context(nullptr);
-
-    emscripten_start_wasm_audio_worklet_thread_async(
-        context, audio_thread_stack, sizeof(audio_thread_stack), &audio_thread_initialized, nullptr);
-}
