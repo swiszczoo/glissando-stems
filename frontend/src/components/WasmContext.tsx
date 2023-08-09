@@ -21,7 +21,7 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
       moduleScript.type = 'text/javascript';
       moduleScript.src = '/native/build/glissando-editor.js';
       window._wasmInitialized = () => {
-        setInstance(Module);
+        setInstance(window.Module);
         window._wasmInitialized = undefined;
       };
       

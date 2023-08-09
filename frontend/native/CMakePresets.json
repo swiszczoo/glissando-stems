@@ -6,7 +6,8 @@
       "generator": "Ninja",
       "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GS_WASM_PATH_PREFIX": "/native/build/"
       },
       "binaryDir": "${sourceDir}/build"
     },
@@ -15,7 +16,18 @@
       "generator": "Ninja",
       "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel"
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "GS_WASM_PATH_PREFIX": "/native/build/"
+      },
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "emscripten-deploy",
+      "generator": "Ninja",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "GS_WASM_PATH_PREFIX": ""
       },
       "binaryDir": "${sourceDir}/build"
     }

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { styled } from "@mui/system";
 import Logo from '../assets/logo.svg';
 
@@ -41,6 +42,12 @@ function EditorContent() {
 }
 
 function EditorRoute() {
+  useEffect(() => () => {
+    if (window.audioContext) {
+      window.audioContext.suspend(); // Ensure to kill audio context while leaving editor
+    }
+  });
+
   return (
     <EditorContent/>
   );

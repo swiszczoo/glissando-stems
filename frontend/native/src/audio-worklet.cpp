@@ -22,8 +22,8 @@ EM_BOOL audio_process(int num_inputs, const AudioSampleFrame *inputs,
 {
     audio_chunk* output = reinterpret_cast<audio_chunk*>(outputs[0].data);
     for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
-        output->left_channel[i] = emscripten_random() * test - 0.05;
-        output->right_channel[i] = emscripten_random() * test - 0.05;
+        output->left_channel[i] = 0;
+        output->right_channel[i] = 0;
     }
 
     return EM_TRUE;
