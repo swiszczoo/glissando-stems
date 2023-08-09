@@ -31,7 +31,8 @@ bool AudioBuffer::operator>>(audio_chunk& target)
     }
 
     memcpy(&target, &_chunk_array[_read_idx], sizeof(audio_chunk));
-    ++_read_idx;
+    int next_cell = (_read_idx + 1) % _array_size; 
+    _read_idx = next_cell;
     _read_idx.notify_one();
     return true;
 }
