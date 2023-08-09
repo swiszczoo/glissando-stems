@@ -16,6 +16,9 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
 
   const contextValue: WasmContextType = useMemo(() => {
     const loadModule = () => {
+      window.Module = {} as EmscriptenModule;
+      window.Module.locateFile = (url, ) => url;
+      
       moduleIsLoading.current = true;
       const moduleScript = document.createElement('script');
       moduleScript.type = 'text/javascript';

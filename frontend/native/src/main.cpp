@@ -1,5 +1,7 @@
 #include <audio-buffer.h>
 #include <audio-worklet.h>
+#include <mixer.h>
+
 #include <emscripten.h>
 
 #include <iostream>
@@ -8,11 +10,7 @@
 #define AUDIO_BUFFER_SIZE 2048
 
 std::unique_ptr<AudioWorklet> g_worklet;
-
-static EM_BOOL test(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-    printf("Undeflow count is %d\n", reinterpret_cast<AudioBuffer*>(userData)->underflow_count());
-    return EM_FALSE;
-}
+std::unique_ptr<Mixer> g_mixer;
 
 int main() {
     std::cout << "WASM module is initializing..." << std::endl;
@@ -24,13 +22,19 @@ int main() {
     g_worklet = std::make_unique<AudioWorklet>();
     g_worklet->set_audio_buffer(buffer);
 
+    // Create mixer
+    g_mixer = std::make_unique<Mixer>(buffer);
+
     EM_ASM({ 
         if (window._wasmInitialized)
             window._wasmInitialized();
     });
     
     std::cout << "WASM module has been initialized!" << std::endl;
-
-    emscripten_set_click_callback("body", buffer.get(), false, &test);
     return 0;
+}
+
+Mixer* get_global_mixer()
+{
+    return g_mixer.get();
 }

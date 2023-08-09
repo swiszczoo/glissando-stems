@@ -12,7 +12,7 @@ AudioBuffer::AudioBuffer(int sampleSize)
 
     _array_size = sampleSize / AUDIO_CHUNK_SAMPLES;
     if (sampleSize % AUDIO_CHUNK_SAMPLES) {
-        ++_array_size;
+        ++_array_size; // Make it ceil() instead of floor()
     }
 
     _chunk_array = std::make_unique<audio_chunk[]>(_array_size);
