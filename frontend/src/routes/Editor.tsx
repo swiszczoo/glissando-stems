@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { styled } from "@mui/system";
 import Logo from '../assets/logo.svg';
 
+import EditorNavbar from "../components/EditorNavbar";
 import LoadingBar from "../components/LoadingBar";
 import SolidBackgroundFrame from "../components/SolidBackgroundFrame";
 
@@ -31,17 +32,18 @@ function LoaderContent() {
 }
 
 function EditorContent() {
-  const native = useNative();
-
-  const loading = !native;
   return (
-    <SolidBackgroundFrame>
-      { loading && <LoaderContent/> }
-    </SolidBackgroundFrame>
+    <>
+      <EditorNavbar />
+    </>
   );
 }
 
 function EditorRoute() {
+  const native = useNative();
+
+  const loading = !native;
+
   useEffect(() => () => {
     if (window.audioContext) {
       window.audioContext.suspend(); // Ensure to kill audio context while leaving editor
@@ -49,7 +51,10 @@ function EditorRoute() {
   });
 
   return (
-    <EditorContent/>
+    <SolidBackgroundFrame>
+      { loading && <LoaderContent /> }
+      { !loading && <EditorContent /> }
+    </SolidBackgroundFrame>
   );
 }
 

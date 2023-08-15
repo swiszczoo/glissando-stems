@@ -23,6 +23,10 @@ import SolidBackgroundFrame from "../components/SolidBackgroundFrame";
 import { useAxios } from '../hooks/useAxios';
 import { useSession } from "../hooks/useSession";
 
+function reversed<T>(array: T[]): T[] {
+  return array.slice().reverse();
+}
+
 const MainSection = styled('section')(({ theme }) => ({
   boxSizing: 'border-box',
   padding: `0px ${theme.spacing(4)}`,
@@ -340,7 +344,7 @@ function SongListRoute() {
         <MainHeader>Lista utworów</MainHeader>
         { status === 'loading' && <LoadingBar/> }
         { status === 'error' && <RedButton onClick={handleReload}>Wczytywanie danych nie powiodło się. Ponów próbę.</RedButton> }
-        { status === 'success' && data.toReversed().map((element: SongResponse) => (
+        { status === 'success' && reversed<SongResponse>(data).map((element: SongResponse) => (
           <Song
             key={element.id} 
             title={element.title} 
