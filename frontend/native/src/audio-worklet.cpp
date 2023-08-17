@@ -81,8 +81,8 @@ void AudioWorklet::callback_audio_worklet_processor_created(
         limiter.threshold.setValueAtTime(-1, audioCtx.currentTime);
         limiter.knee.setValueAtTime(0, audioCtx.currentTime);
         limiter.ratio.setValueAtTime(20, audioCtx.currentTime);
-        limiter.attack.setValueAtTime(0.002, audioCtx.currentTime);
-        limiter.release.setValueAtTime(0.025, audioCtx.currentTime);
+        limiter.attack.setValueAtTime(0.005, audioCtx.currentTime);
+        limiter.release.setValueAtTime(0.058, audioCtx.currentTime);
 
         emscriptenGetAudioObject($0).connect(limiter);
         limiter.connect(audioCtx.destination);

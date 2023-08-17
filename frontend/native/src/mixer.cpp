@@ -39,6 +39,7 @@ void Mixer::stop()
 {
     _state = PlaybackState::STOPPED;
     reset_playback();
+    _buffer->clear();
 }
 
 std::string Mixer::playback_state() const
@@ -111,8 +112,9 @@ void Mixer::thread_main()
 
 void Mixer::perform_mixdown(audio_chunk& chunk)
 {
+    uint32_t position = _playbackPosition;
+
     if (_state == PlaybackState::PLAYING) {
-        uint32_t position = _playbackPosition;
 
         for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
             float value = sin(position / (float)AUDIO_SAMPLE_RATE * 440 * 2 * M_PI) * 0.5f;
@@ -123,6 +125,9 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
             ++position;
         }
 
-        _playbackPosition = position;
+        _metronome.process(_playbackPosition);
     }
+
+    _metronome.render(chunk);
+    _playbackPosition = position;
 }

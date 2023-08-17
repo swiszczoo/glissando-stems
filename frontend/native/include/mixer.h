@@ -1,4 +1,6 @@
 #pragma once
+#include <metronome.h>
+
 #include <memory>
 #include <thread>
 
@@ -40,6 +42,8 @@ private:
     std::shared_ptr<AudioBuffer> _buffer;
     std::atomic<PlaybackState> _state;
     std::atomic<uint32_t> _playbackPosition;
+
+    Metronome _metronome;
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);

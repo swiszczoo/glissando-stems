@@ -135,7 +135,7 @@ function EditorNavbar() {
       return
 
     native!.stop();
-    window.audioContext?.suspend();
+    setTimeout(() => window.audioContext?.suspend(), 100);
     invalidateNative();
   }
 

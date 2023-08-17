@@ -1,4 +1,6 @@
 #pragma once
+#include <spin-lock.h>
+
 #include <atomic>
 #include <condition_variable>
 #include <memory>
@@ -25,6 +27,7 @@ public:
     int underflow_count() const;
     bool operator>>(audio_chunk& target);
     AudioBuffer& operator<<(const audio_chunk& source);
+    void clear();
 
 private:
     std::unique_ptr<audio_chunk[]> _chunk_array;
@@ -32,4 +35,6 @@ private:
     std::atomic_int _underflow_count;
     std::atomic_int _read_idx;
     std::atomic_int _write_idx;
+    std::atomic_int _reset_counter;
+    SpinLock _read_lock, _write_lock;
 };

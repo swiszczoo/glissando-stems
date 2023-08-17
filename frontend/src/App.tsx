@@ -51,7 +51,7 @@ function AudioContextKiller() {
 
     if (!audioContextAllowed) {
       if (window.audioContext) {
-        window.audioContext.suspend();
+        setTimeout(() => window.audioContext?.suspend(), 100);
       }
 
       if (native && native.getPlaybackState() !== 'stop') {
