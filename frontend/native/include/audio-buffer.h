@@ -5,6 +5,7 @@
 #include <mutex>
 
 #define AUDIO_CHUNK_SAMPLES 128
+#define AUDIO_SAMPLE_RATE 44100
 
 struct audio_chunk {
     float left_channel[AUDIO_CHUNK_SAMPLES];

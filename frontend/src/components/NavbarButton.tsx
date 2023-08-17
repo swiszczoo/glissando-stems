@@ -20,9 +20,10 @@ const makeNavbarButton = (textColor: string) => styled(Button)(({ theme }) => ({
     userSelect: 'none',
     '&:not(:disabled):hover, &:focus': {
         background: `${textColor}40`,
-        boxShadow: `0 0 10px ${textColor}40`
+        boxShadow: `0 0 10px ${textColor}40`,
+        zIndex: 1,
     },
-    '&:not(:disabled):hover:active': {
+    '&:not(:disabled):hover:active, &:not(:disabled).active': {
         transition: 'none',
         background: textColor,
         color: theme.palette.primary.contrastText,
@@ -33,7 +34,8 @@ const makeNavbarButton = (textColor: string) => styled(Button)(({ theme }) => ({
     },
     '& *': {
       fontSize: 20,
-    }
+      pointerEvents: 'none',
+    },
 }));
 
 export const NormalButton = makeNavbarButton('#8cb2d9');

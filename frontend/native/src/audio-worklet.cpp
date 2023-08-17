@@ -13,7 +13,7 @@ AudioWorklet::AudioWorklet()
 {
     EmscriptenWebAudioCreateAttributes options = {
         .latencyHint = "interactive",
-        .sampleRate = 44100
+        .sampleRate = AUDIO_SAMPLE_RATE,
     };
 
     EMSCRIPTEN_WEBAUDIO_T context = emscripten_create_audio_context(&options);

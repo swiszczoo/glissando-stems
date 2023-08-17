@@ -3,15 +3,18 @@ import { createContext, useMemo, useRef, useState } from 'react';
 export const WasmContext = createContext<WasmContextType>({
   module: undefined,
   ensureModuleIsLoaded: () => false,
+  invalidateState: () => {},
 });
 
 interface WasmContextType {
   module: EmscriptenModule | undefined,
   ensureModuleIsLoaded: () => boolean,
+  invalidateState: () => void,
 }
 
 function WasmContextProvider(props: React.PropsWithChildren<object>) {
   const [ instance, setInstance ] = useState<EmscriptenModule | undefined>(undefined);
+  const [ inv, setInv ] = useState(0);
   const moduleIsLoading = useRef<boolean>(false);
 
   const contextValue: WasmContextType = useMemo(() => {
@@ -41,8 +44,12 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
         }
         return false;
       },
+
+      invalidateState: () => {
+        setInv(inv + 1);
+      },
     };
-  }, [instance]);
+  }, [instance, inv]);
 
   return (
     <WasmContext.Provider value={contextValue}>

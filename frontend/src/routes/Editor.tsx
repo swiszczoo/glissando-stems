@@ -40,15 +40,9 @@ function EditorContent() {
 }
 
 function EditorRoute() {
-  const native = useNative();
+  const [ native, ] = useNative();
 
   const loading = !native;
-
-  useEffect(() => () => {
-    if (window.audioContext) {
-      window.audioContext.suspend(); // Ensure to kill audio context while leaving editor
-    }
-  });
 
   return (
     <SolidBackgroundFrame>

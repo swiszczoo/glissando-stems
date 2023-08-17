@@ -7,7 +7,16 @@ extern Mixer* get_global_mixer();
 
 
 EMSCRIPTEN_BINDINGS(editor) {
-    function("get_global_mixer", &get_global_mixer, allow_raw_pointer<Mixer>());
+    function("getGlobalMixer", &get_global_mixer, allow_raw_pointer<Mixer>());
     class_<Mixer>("Mixer")
-        .function("test_js_binding", &Mixer::test_js_binding);
+        .function("testJsBinding", &Mixer::test_js_binding)
+        .function("play", &Mixer::play)
+        .function("pause", &Mixer::pause)
+        .function("stop", &Mixer::stop)
+        .function("getPlaybackState", &Mixer::playback_state)
+        .function("resetPlayback", &Mixer::reset_playback)
+        .function("setPlaybackPosition", &Mixer::set_playback_position)
+        .function("getPlaybackPosition", &Mixer::playback_position)
+        .function("getSampleRate", &Mixer::sample_rate)
+        ;
 }

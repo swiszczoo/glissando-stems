@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/system';
 
 import EditorRoute from './routes/Editor';
@@ -11,6 +12,8 @@ import AxiosContextProvider from './components/AxiosContext';
 import Page from './components/Page';
 import SessionContextProvider from './components/SessionContext';
 import WasmContextProvider from './components/WasmContext';
+
+import useNative from './hooks/useNative';
 
 const theme = createTheme({
   palette: {
@@ -37,12 +40,37 @@ const theme = createTheme({
   }
 });
 
+function AudioContextKiller() {
+  const location = useLocation();
+  const [ native, invalidateNative ] = useNative();
+  const pathname = location.pathname;
+
+  useEffect(() => {
+    const audioContextAllowed = pathname.startsWith('/songs/edit')
+      || pathname.startsWith('/songs/play');
+
+    if (!audioContextAllowed) {
+      if (window.audioContext) {
+        window.audioContext.suspend();
+      }
+
+      if (native && native.getPlaybackState() !== 'stop') {
+        native.stop();
+        invalidateNative();
+      }
+    }
+  }, [pathname, native, invalidateNative]);
+
+  return <></>;
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <AxiosContextProvider>
         <SessionContextProvider>
           <WasmContextProvider>
+            <AudioContextKiller />
             <Routes>
               <Route path='' Component={() => <Page name="Ładowanie"><MainRoute /></Page>} />
               <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute /></Page>} />

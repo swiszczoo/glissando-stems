@@ -1,6 +1,5 @@
 {
     "debug.node.autoAttach": true,
     "editor.tabSize": 2,
-    "prettier.singleQuote": true,
-    "cmake.sourceDirectory": "/home/lukasz/Pulpit/Projekty/glissando-stems/frontend/native"
+    "prettier.singleQuote": true
 }
