@@ -88,6 +88,7 @@ void AudioWorklet::callback_audio_worklet_processor_created(
         limiter.connect(audioCtx.destination);
 
         window.audioContext = audioCtx;
+        window.audioLimiter = limiter;
         console.info(`Output sample rate is ${window.audioContext.sampleRate} Hz`);
 
     }, wasm_audio_worklet, audio_context);

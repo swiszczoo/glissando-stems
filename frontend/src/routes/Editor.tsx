@@ -7,6 +7,7 @@ import Logo from '../assets/logo.svg';
 
 import EditorNavbar from '../components/EditorNavbar';
 import LoadingBar from '../components/LoadingBar';
+import PeakMeter from '../components/PeakMeter';
 import SolidBackgroundFrame from '../components/SolidBackgroundFrame';
 
 import { useAxios } from '../hooks/useAxios';
@@ -36,6 +37,15 @@ const Frame = styled('div')(({ theme }) => `
   align-items: center;
 `);
 
+const ContentContainer = styled('section')(() => ({
+  flexGrow: 1,
+  width: '100%',
+  display: 'flex',
+  flexDirection: 'row',
+  flexWrap: 'nowrap',
+  alignItems: 'stretch',
+}));
+
 function LoaderContent() {
   return (
     <Frame>
@@ -62,6 +72,10 @@ function EditorContent(props: EditorContentProps) {
   return (
     <>
       <EditorNavbar songTitle={title} songBpm={bpm}/>
+      <ContentContainer>
+        <span style={{ flexGrow: 1 }} />
+        <PeakMeter />
+      </ContentContainer>
     </>
   );
 }

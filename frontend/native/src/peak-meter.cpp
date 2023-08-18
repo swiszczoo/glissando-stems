@@ -122,7 +122,7 @@ std::array RESAMPLER_TAPS = {
     -0.000327739447665758f,
 };
 
-const double PeakMeter::DESCENT_RATE = 0.9999;
+const double PeakMeter::DESCENT_RATE = 0.99993;
 
 class PeakMeter::impl {
 private:

@@ -1,5 +1,6 @@
 interface Window {
   audioContext?: AudioContext;
+  audioLimiter?: DynamicsCompressorNode;
   _wasmInitialized?: () => void;
   
   Module: EmscriptenModule;
