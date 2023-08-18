@@ -1,6 +1,8 @@
 #include <mixer.h>
 
 #include <audio-buffer.h>
+#include <metronome.h>
+#include <peak-meter.h>
 #include <utils.h>
 
 #include <cassert>
@@ -12,6 +14,8 @@ Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     : _buffer(std::move(out_buffer))
     , _state(PlaybackState::STOPPED)
     , _playback_position(0)
+    , _master_level(std::make_unique<PeakMeter>())
+    , _metronome(std::make_unique<Metronome>())
     , _metronome_enabled(false)
     , _metronome_gain_db(1.0)
     , _bpm(120.0)
@@ -118,6 +122,16 @@ double Mixer::track_bpm() const
     return _bpm;
 }
 
+double Mixer::left_channel_out_db() const
+{
+    return _master_level->left_db();
+}
+
+double Mixer::right_channel_out_db() const
+{
+    return _master_level->right_db();
+}
+
 void Mixer::thread_main()
 {
     int last_underflows = _buffer->underflow_count();
@@ -160,12 +174,13 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
         }
         
         if (_metronome_enabled) {
-            _metronome.set_bpm(_bpm);
-            _metronome.set_gain(Utils::decibelsToGain(_metronome_gain_db));
-            _metronome.process(_playback_position);
+            _metronome->set_bpm(_bpm);
+            _metronome->set_gain(Utils::decibelsToGain(_metronome_gain_db));
+            _metronome->process(_playback_position);
         }
     }
 
-    _metronome.render(chunk);
+    _metronome->render(chunk);
+    _master_level->process(chunk);
     _playback_position = position;
 }

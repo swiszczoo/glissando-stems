@@ -1,11 +1,11 @@
 #pragma once
-#include <metronome.h>
-
 #include <memory>
 #include <thread>
 
 // Forward declarations
 class AudioBuffer;
+class Metronome;
+class PeakMeter;
 
 struct audio_chunk;
 
@@ -36,6 +36,8 @@ public:
     double metronome_gain_db() const;
     void set_track_bpm(double bpm);
     double track_bpm() const;
+    double left_channel_out_db() const;
+    double right_channel_out_db() const;
 
 private:
     enum class PlaybackState {
@@ -49,7 +51,8 @@ private:
     std::atomic<PlaybackState> _state;
     std::atomic<uint32_t> _playback_position;
 
-    Metronome _metronome;
+    std::unique_ptr<PeakMeter> _master_level;
+    std::unique_ptr<Metronome> _metronome;
     std::atomic_bool _metronome_enabled;
     std::atomic<double> _metronome_gain_db;
     std::atomic<double> _bpm;
