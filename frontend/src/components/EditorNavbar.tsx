@@ -14,7 +14,7 @@ import BtnStopIcon from '../assets/btn-stop.svg';
 import BtnNextIcon from '../assets/btn-next.svg';
 import BtnTickIcon from '../assets/btn-tick.svg';
 
-import useNative from '../hooks/useNative';
+import { useNative } from '../hooks/useNative';
 
 interface FieldWithIconProps {
   iconSrc: string;
@@ -108,7 +108,12 @@ const RedIcon = styled('img')(() => ({
   }
 }));
 
-function EditorNavbar() {
+interface EditorNavbarProps {
+  songTitle: string;
+  songBpm: number;
+}
+
+function EditorNavbar(props: EditorNavbarProps) {
   const [ native, invalidateNative ] = useNative();
   const state = native!.getPlaybackState();
 
@@ -145,7 +150,7 @@ function EditorNavbar() {
   }
 
   return (
-    <Navbar title="Tytuł" customSeparator={true}>
+    <Navbar title={props.songTitle} customSeparator={true}>
       <NavbarSeparator />
       <PlaybackControlsContainer>
         <NormalButton title='Poprzednia sekcja'>
@@ -173,7 +178,7 @@ function EditorNavbar() {
       </FieldWithIcon>
       <span style={{ width: 32 }} />
       <FieldWithIcon iconSrc={BpmIcon} width={4.5} title='Tempo'>
-        <span>123.456</span>
+        <span>{ props.songBpm.toFixed(3) }</span>
       </FieldWithIcon>
       <span style={{ width: 32 }} />
     </Navbar>

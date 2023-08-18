@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
-import useNative from './useNative';
+import { useNative } from './useNative';
 
-function usePlaybackUpdate(fun: (mixer: NativeMixer) => void) {
+export function usePlaybackUpdate(fun: (mixer: NativeMixer) => void) {
   const [ native, ] = useNative();
 
   useEffect(() => {
@@ -32,4 +32,3 @@ function usePlaybackUpdate(fun: (mixer: NativeMixer) => void) {
   }, [native, fun]);
 }
 
-export default usePlaybackUpdate;

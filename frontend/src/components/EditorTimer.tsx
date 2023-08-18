@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
-import useNative from '../hooks/useNative';
-import usePlaybackUpdate from '../hooks/usePlaybackUpdate';
+import { useNative } from '../hooks/useNative';
+import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
 
 interface Timestamp {
   time: string;
@@ -38,11 +38,11 @@ function EditorTimer() {
   });
 
   const sampleRate = native?.getSampleRate() || 0;
-  const bpm = 120;
+  const bpm = native?.getTrackBpm() || 120.0;
 
   usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
     setTimestamp(getTimestamp(mixer.getPlaybackPosition(), sampleRate, bpm));
-  }, [sampleRate]));
+  }, [bpm, sampleRate]));
   
   return (
     <>

@@ -20,4 +20,6 @@ interface NativeMixer {
   isMetronomeEnabled: () => boolean,
   setMetronomeGainDb: (decibels: number) => void,
   getMetronomeGainDb: () => number,
+  setTrackBpm: (bpm: number) => void,
+  getTrackBpm: () => number,
 }

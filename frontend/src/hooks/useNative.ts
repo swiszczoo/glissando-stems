@@ -5,7 +5,7 @@ interface GlissandoModule extends EmscriptenModule {
   getGlobalMixer: () => NativeMixer;
 }
 
-function useNative(): [NativeMixer | undefined, () => void] {
+export function useNative(): [NativeMixer | undefined, () => void] {
   const ctx = useContext(WasmContext);
   ctx.ensureModuleIsLoaded();
 
@@ -13,5 +13,3 @@ function useNative(): [NativeMixer | undefined, () => void] {
   
   return [mixer, ctx.invalidateState];
 }
-
-export default useNative;

@@ -34,6 +34,8 @@ public:
     bool metronome_enabled() const;
     void set_metronome_gain_db(double gain);
     double metronome_gain_db() const;
+    void set_track_bpm(double bpm);
+    double track_bpm() const;
 
 private:
     enum class PlaybackState {
@@ -50,6 +52,7 @@ private:
     Metronome _metronome;
     std::atomic_bool _metronome_enabled;
     std::atomic<double> _metronome_gain_db;
+    std::atomic<double> _bpm;
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);

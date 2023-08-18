@@ -13,7 +13,7 @@ import Page from './components/Page';
 import SessionContextProvider from './components/SessionContext';
 import WasmContextProvider from './components/WasmContext';
 
-import useNative from './hooks/useNative';
+import { useNative } from './hooks/useNative';
 
 const theme = createTheme({
   palette: {

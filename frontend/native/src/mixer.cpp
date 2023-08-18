@@ -14,6 +14,7 @@ Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     , _playback_position(0)
     , _metronome_enabled(false)
     , _metronome_gain_db(1.0)
+    , _bpm(120.0)
 {
     _thread = std::thread(&Mixer::thread_main, this);
 }
@@ -107,6 +108,16 @@ double Mixer::metronome_gain_db() const
     return _metronome_gain_db;
 }
 
+void Mixer::set_track_bpm(double bpm)
+{
+    _bpm = bpm;
+}
+
+double Mixer::track_bpm() const
+{
+    return _bpm;
+}
+
 void Mixer::thread_main()
 {
     int last_underflows = _buffer->underflow_count();
@@ -149,6 +160,7 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
         }
         
         if (_metronome_enabled) {
+            _metronome.set_bpm(_bpm);
             _metronome.set_gain(Utils::decibelsToGain(_metronome_gain_db));
             _metronome.process(_playback_position);
         }

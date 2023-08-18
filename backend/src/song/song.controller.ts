@@ -58,7 +58,7 @@ export class SongController {
     );
   }
 
-  @Get('bySlug/:slug')
+  @Get('by-slug/:slug')
   @Roles(Role.User, Role.Admin)
   async findOneBySlug(
     @Session() session: SessionData,
@@ -103,7 +103,7 @@ export class SongController {
     }
   }
 
-  @Delete('bySlug/:slug')
+  @Delete('by-slug/:slug')
   @Roles(Role.User, Role.Admin)
   async deleteOneBySlug(
     @Session() session: SessionData,
