@@ -15,4 +15,9 @@ interface NativeMixer {
   setPlaybackPosition: (sampleNum: number) => void,
   getPlaybackPosition: () => number,
   getSampleRate: () => number,
+  setMetronomeEnabled: (enabled: boolean) => void,
+  toggleMetronome: () => void,
+  isMetronomeEnabled: () => boolean,
+  setMetronomeGainDb: (decibels: number) => void,
+  getMetronomeGainDb: () => number,
 }

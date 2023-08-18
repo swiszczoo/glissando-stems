@@ -29,7 +29,11 @@ public:
     uint32_t playback_position() const;
     bool set_playback_position(uint32_t new_position);
     int sample_rate() const;
-
+    void set_metronome_enabled(bool enabled);
+    void toggle_metronome();
+    bool metronome_enabled() const;
+    void set_metronome_gain_db(double gain);
+    double metronome_gain_db() const;
 
 private:
     enum class PlaybackState {
@@ -41,9 +45,11 @@ private:
     std::thread _thread;
     std::shared_ptr<AudioBuffer> _buffer;
     std::atomic<PlaybackState> _state;
-    std::atomic<uint32_t> _playbackPosition;
+    std::atomic<uint32_t> _playback_position;
 
     Metronome _metronome;
+    std::atomic_bool _metronome_enabled;
+    std::atomic<double> _metronome_gain_db;
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);

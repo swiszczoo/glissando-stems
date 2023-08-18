@@ -139,6 +139,11 @@ function EditorNavbar() {
     invalidateNative();
   }
 
+  const handleToggleMetronome = () => {
+    native!.toggleMetronome();
+    invalidateNative();
+  }
+
   return (
     <Navbar title="Tytuł" customSeparator={true}>
       <NavbarSeparator />
@@ -158,7 +163,7 @@ function EditorNavbar() {
         <NormalButton title='Następna sekcja'>
           <NormalIcon src={BtnNextIcon} />
         </NormalButton>
-        <NormalButton title='Metronom'>
+        <NormalButton title='Metronom' className={ native!.isMetronomeEnabled() ? 'active': '' } onClick={handleToggleMetronome}>
           <NormalIcon src={BtnTickIcon} />
         </NormalButton>
       </PlaybackControlsContainer>

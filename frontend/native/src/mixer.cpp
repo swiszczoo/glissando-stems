@@ -1,6 +1,7 @@
 #include <mixer.h>
 
 #include <audio-buffer.h>
+#include <utils.h>
 
 #include <cassert>
 #include <iostream>
@@ -10,7 +11,9 @@
 Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     : _buffer(std::move(out_buffer))
     , _state(PlaybackState::STOPPED)
-    , _playbackPosition(0)
+    , _playback_position(0)
+    , _metronome_enabled(false)
+    , _metronome_gain_db(1.0)
 {
     _thread = std::thread(&Mixer::thread_main, this);
 }
@@ -56,18 +59,18 @@ std::string Mixer::playback_state() const
 
 void Mixer::reset_playback()
 {
-    _playbackPosition = 0;
+    _playback_position = 0;
 }
 
 uint32_t Mixer::playback_position() const
 {
-    return _playbackPosition;
+    return _playback_position;
 }
 
 bool Mixer::set_playback_position(uint32_t new_position)
 {
     if (_state != PlaybackState::STOPPED) {
-        _playbackPosition = new_position;
+        _playback_position = new_position;
         return true;
     }
 
@@ -77,6 +80,31 @@ bool Mixer::set_playback_position(uint32_t new_position)
 int Mixer::sample_rate() const
 {
     return AUDIO_SAMPLE_RATE;
+}
+
+void Mixer::set_metronome_enabled(bool enabled)
+{
+    _metronome_enabled = enabled;
+}
+
+void Mixer::toggle_metronome()
+{
+    _metronome_enabled = !_metronome_enabled;
+}
+
+bool Mixer::metronome_enabled() const
+{
+    return _metronome_enabled;
+}
+
+void Mixer::set_metronome_gain_db(double gain)
+{
+    _metronome_gain_db = gain;
+}
+
+double Mixer::metronome_gain_db() const
+{
+    return _metronome_gain_db;
 }
 
 void Mixer::thread_main()
@@ -112,22 +140,20 @@ void Mixer::thread_main()
 
 void Mixer::perform_mixdown(audio_chunk& chunk)
 {
-    uint32_t position = _playbackPosition;
+    uint32_t position = _playback_position;
 
     if (_state == PlaybackState::PLAYING) {
 
         for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
-            float value = sin(position / (float)AUDIO_SAMPLE_RATE * 440 * 2 * M_PI) * 0.5f;
-
-            chunk.left_channel[i] = value;
-            chunk.right_channel[i] = value;
-
             ++position;
         }
-
-        _metronome.process(_playbackPosition);
+        
+        if (_metronome_enabled) {
+            _metronome.set_gain(Utils::decibelsToGain(_metronome_gain_db));
+            _metronome.process(_playback_position);
+        }
     }
 
     _metronome.render(chunk);
-    _playbackPosition = position;
+    _playback_position = position;
 }

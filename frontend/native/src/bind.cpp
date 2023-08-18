@@ -18,5 +18,10 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("setPlaybackPosition", &Mixer::set_playback_position)
         .function("getPlaybackPosition", &Mixer::playback_position)
         .function("getSampleRate", &Mixer::sample_rate)
+        .function("setMetronomeEnabled", &Mixer::set_metronome_enabled)
+        .function("toggleMetronome", &Mixer::toggle_metronome)
+        .function("isMetronomeEnabled", &Mixer::metronome_enabled)
+        .function("setMetronomeGainDb", &Mixer::set_metronome_gain_db)
+        .function("getMetronomeGainDb", &Mixer::metronome_gain_db)
         ;
 }
