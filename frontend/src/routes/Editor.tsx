@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { styled } from '@mui/system';
 import { useQuery } from '@tanstack/react-query';
@@ -13,6 +13,7 @@ import SolidBackgroundFrame from '../components/SolidBackgroundFrame';
 
 import { useAxios } from '../hooks/useAxios';
 import { useNative } from '../hooks/useNative';
+import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
 
 
 interface SongData {
@@ -21,6 +22,7 @@ interface SongData {
   title: string;
   bpm: number;
   duration: number;
+  samples: number;
   stemCount: number;
   form: { bar: number; name: string }[];
 }
@@ -58,17 +60,44 @@ function LoaderContent() {
   );
 }
 
+interface PlaybackStateChangeDetectorProps {
+  currentState: string;
+}
+
+function PlaybackStateChangeDetector(props: PlaybackStateChangeDetectorProps) {
+  const [ , invalidateNative ] = useNative();
+  const { currentState } = props;
+
+  usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
+    const playbackState = mixer.getPlaybackState();
+    if (playbackState != currentState) {
+      invalidateNative();
+      
+      if (playbackState === 'stop') {
+        setTimeout(() => window.audioContext?.suspend(), 100);
+      }
+    }
+  }, [currentState, invalidateNative]));
+
+  return <></>;
+}
+
 interface EditorContentProps {
   song: SongData;
 }
 
 function EditorContent(props: EditorContentProps) {
-  const [ native, ] = useNative();
-  const { bpm, title } = props.song;
+  const [ native, invalidateNative ] = useNative();
+  const { bpm, samples, title } = props.song;
 
   useEffect(() => {
     native!.setTrackBpm(bpm);
-  }, [bpm, native]);
+    native!.setTrackLength(samples);
+  }, [bpm, native, samples]);
+
+  useEffect(() => {
+    invalidateNative();
+  }, [bpm, samples, invalidateNative]);
 
   return (
     <>
@@ -76,6 +105,7 @@ function EditorContent(props: EditorContentProps) {
       <ContentContainer>
         <EditorTracks/>
         <PeakMeter />
+        <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/>
       </ContentContainer>
     </>
   );
@@ -88,9 +118,18 @@ function EditorRoute() {
   const songQuery = useQuery(['songs', slug], async () => {
     const { data } = await axios.get(`/api/songs/by-slug/${slug}`);
     return data;
-  });
+  }, { staleTime: Infinity });
 
-  const loading = !native || songQuery.status != 'success';
+  const stemQuery = useQuery(['stems', slug], async () => {
+    const { data } = await axios.get(`/api/songs/by-slug/${slug}/stems`);
+    return data;
+  }, { staleTime: Infinity });
+
+  const loading = (
+    !native 
+    || songQuery.status !== 'success' 
+    || stemQuery.status !== 'success'
+  );
 
   return (
     <SolidBackgroundFrame>

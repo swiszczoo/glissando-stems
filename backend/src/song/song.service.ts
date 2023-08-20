@@ -7,7 +7,7 @@ import * as nanoid from 'nanoid';
 import { Config } from '../config';
 
 import { Song } from './entities/song.entity';
-import { Stem } from './entities/stem.entity';
+import { Stem, StemStatus } from './entities/stem.entity';
 
 export type SongWithStemCount = Song & { stemCount: number };
 
@@ -116,11 +116,14 @@ export class SongService {
   }
 
   async getReadyStemsBySong(song: Song): Promise<Stem[]> {
-    const stems = await this.stemRepository.findBy({ songId: song.id });
+    const stems = await this.stemRepository.findBy({
+      songId: song.id,
+      status: StemStatus.READY,
+    });
     return stems;
   }
 
-  async getReadyStemBySongAndId(
+  async getStemBySongAndId(
     song: Song,
     stemId: number,
   ): Promise<Stem | undefined> {

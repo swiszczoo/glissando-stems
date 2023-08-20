@@ -122,7 +122,7 @@ std::array RESAMPLER_TAPS = {
     -0.000327739447665758f,
 };
 
-const double PeakMeter::DESCENT_RATE = 0.99993;
+const double PeakMeter::DESCENT_RATE = 0.99991;
 
 class PeakMeter::impl {
 private:
@@ -134,12 +134,14 @@ private:
 
     void process_sample(float sample, FilterType& filter, double& peak)
     {
-        // Based on BS.1770-4 (4x upsampling)
+        // Based on ITU.R BS.1770-4 Annex 2
+        // Omitting -12.04 dB attenuation - floating point arithmetic is used
 
         peak *= PeakMeter::DESCENT_RATE;
         float this_peak = std::abs(sample);
         float temp;
         
+        // Oversample 4x and put into LPF
         this_peak = std::max(this_peak, std::abs(filter(sample)));
         this_peak = std::max(this_peak, std::abs(filter(0.f)));
         this_peak = std::max(this_peak, std::abs(filter(0.f)));

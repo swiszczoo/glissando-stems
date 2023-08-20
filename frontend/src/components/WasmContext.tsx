@@ -1,4 +1,4 @@
-import { createContext, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useMemo, useRef, useState } from 'react';
 
 export const WasmContext = createContext<WasmContextType>({
   module: undefined,
@@ -16,6 +16,8 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
   const [ instance, setInstance ] = useState<EmscriptenModule | undefined>(undefined);
   const [ inv, setInv ] = useState(0);
   const moduleIsLoading = useRef<boolean>(false);
+
+  const invalidateState = useCallback(() => setInv((inv) => inv + 1), []);
 
   const contextValue: WasmContextType = useMemo(() => {
     const loadModule = () => {
@@ -45,9 +47,7 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
         return false;
       },
 
-      invalidateState: () => {
-        setInv(inv + 1);
-      },
+      invalidateState,
     };
   }, [instance, inv]);
 

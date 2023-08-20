@@ -1,12 +1,12 @@
 import { forwardRef } from 'react';
 import { styled } from '@mui/system';
 
-const makeGradient = (hue: number, saturation: number) => {
-  const color = (value: number) => `hsl(${hue} ${saturation}% ${value}%)`;
-  return `linear-gradient(to bottom, ${color(50)} 0%, ${color(30)} 6%, ${color(15)} 96%, black 100%)`;
+const makeGradient = (hue: number, saturation: number, valueGain: number) => {
+  const color = (value: number) => `hsl(${hue} ${saturation}% ${value * valueGain}%)`;
+  return `linear-gradient(to bottom, ${color(50)} 0%, ${color(25)} 6%, ${color(12)} 94%, black 100%)`;
 };
 
-const GRADIENT_PERCUSSION = makeGradient(0, 0);
+const GRADIENT_PERCUSSION = makeGradient(0, 0, 1);
 
 interface InstrumentTileProps {
   instrument: string;
@@ -15,8 +15,9 @@ interface InstrumentTileProps {
   title?: string;
 }
 
-const InstrumentTileBase = styled('div')(() => ({
-  border: '1px solid black',
+const InstrumentTileBase = styled('div')(({ theme }) => ({
+  border: '3px solid black',
+  borderBottomColor: theme.palette.background.light,
   position: 'relative',
 }));
 

@@ -20,6 +20,7 @@ import { Roles } from '../common/roles.decorator';
 import { SongCreateDto } from './dto/song-create.dto';
 import { SongResponseDto } from './dto/song-response.dto';
 import { StemResponseDto } from './dto/stem-response.dto';
+import { StemStatus } from './entities/stem.entity';
 
 @Controller('songs')
 export class SongController {
@@ -147,12 +148,19 @@ export class SongController {
       throw this.exceptions.NOT_FOUND;
     }
 
-    const stem = await this.service.getReadyStemBySongAndId(song, stemId);
+    const stem = await this.service.getStemBySongAndId(song, stemId);
     if (!stem) {
       throw this.exceptions.NOT_FOUND;
     }
 
-    return StemResponseDto.entityToDto(stem);
+    switch (stem.status) {
+      case StemStatus.PROCESSING:
+        return StemResponseDto.entityToDto(stem); // TODO: use a different dto
+      case StemStatus.READY:
+        return StemResponseDto.entityToDto(stem);
+      default:
+        throw this.exceptions.NOT_AVAILABLE;
+    }
   }
 
   @Get('by-slug/:slug/stems')
@@ -182,11 +190,18 @@ export class SongController {
       throw this.exceptions.NOT_FOUND;
     }
 
-    const stem = await this.service.getReadyStemBySongAndId(song, stemId);
+    const stem = await this.service.getStemBySongAndId(song, stemId);
     if (!stem) {
       throw this.exceptions.NOT_FOUND;
     }
 
-    return StemResponseDto.entityToDto(stem);
+    switch (stem.status) {
+      case StemStatus.PROCESSING:
+        return StemResponseDto.entityToDto(stem); // TODO: use a different dto
+      case StemStatus.READY:
+        return StemResponseDto.entityToDto(stem);
+      default:
+        throw this.exceptions.NOT_AVAILABLE;
+    }
   }
 }

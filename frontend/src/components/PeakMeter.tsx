@@ -19,7 +19,7 @@ const PeakMeterLegend = styled('div')(({ theme }) => ({
 }));
 
 const PeakMeterLimiter = styled('div')(() => ({
-  fontWeight: 700,
+  fontWeight: 900,
   width: '100%',
   textAlign: 'center',
   color: '#d13b32',
@@ -64,7 +64,7 @@ const PeakMeterScaleContainer = styled('div')(() => ({
 }));
 
 const PeakMeterScale = styled('div')(({ theme }) => ({
-  fontWeight: 700,
+  fontWeight: 900,
   fontSize: 11,
   width: '90%',
   textAlign: 'right',
@@ -121,7 +121,7 @@ function PeakMeter() {
       <div>
         <PeakMeterLegend>L</PeakMeterLegend>
         <PeakMeterLegend>R</PeakMeterLegend>
-        <PeakMeterLegend>dB</PeakMeterLegend>
+        <PeakMeterLegend>dB(TP)</PeakMeterLegend>
       </div>
       <div style={{ position: 'relative', flexGrow: 1 }}>
         <PeakMeterController />

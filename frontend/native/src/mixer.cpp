@@ -14,6 +14,7 @@ Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     : _buffer(std::move(out_buffer))
     , _state(PlaybackState::STOPPED)
     , _playback_position(0)
+    , _length(0)
     , _master_level(std::make_unique<PeakMeter>())
     , _metronome(std::make_unique<Metronome>())
     , _metronome_enabled(false)
@@ -45,6 +46,8 @@ void Mixer::pause()
 
 void Mixer::stop()
 {
+    std::lock_guard lock(_mixdown_lock);
+
     _state = PlaybackState::STOPPED;
     reset_playback();
     _buffer->clear();
@@ -132,6 +135,16 @@ double Mixer::right_channel_out_db() const
     return _master_level->right_db();
 }
 
+void Mixer::set_track_length(uint32_t samples)
+{
+    _length = samples;
+}
+
+uint32_t Mixer::track_length() const
+{
+    return _length;
+}
+
 void Mixer::thread_main()
 {
     int last_underflows = _buffer->underflow_count();
@@ -150,6 +163,10 @@ void Mixer::thread_main()
 
         (*_buffer) << chunk;
 
+        if (_playback_position >= _length) {
+            stop();
+        }
+
         if (--undeflow_check_countdown == 0) {
             int current_undeflows = _buffer->underflow_count();
             if (current_undeflows > last_underflows) {
@@ -165,9 +182,12 @@ void Mixer::thread_main()
 
 void Mixer::perform_mixdown(audio_chunk& chunk)
 {
-    uint32_t position = _playback_position;
+    std::lock_guard lock(_mixdown_lock);
 
-    if (_state == PlaybackState::PLAYING) {
+    uint32_t position = _playback_position;
+    PlaybackState state = _state;
+
+    if (state == PlaybackState::PLAYING) {
 
         for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
             ++position;
@@ -179,7 +199,7 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
             _metronome->process(_playback_position);
         }
     }
-    if (_state == PlaybackState::STOPPED) {
+    if (state == PlaybackState::STOPPED) {
         _master_level->reset();
     }
 

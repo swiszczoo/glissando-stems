@@ -1,17 +1,27 @@
+import { useMemo } from 'react';
+import { useParams } from 'react-router';
 import { styled } from '@mui/system';
+import { useQuery } from '@tanstack/react-query';
 
 import InstrumentTile from './InstrumentTile';
 import MuteSolo from './MuteSolo';
+import PlaybackIndicator from './PlaybackIndicator';
+import Timeline from './Timeline';
+
+import { useAxios } from '../hooks/useAxios';
+import { useQueryData } from '../hooks/useQueryData';
 
 const EditorTracksContainer = styled('div')(({ theme }) => ({
   flexGrow: 1,
-  padding: theme.spacing(2),
+  margin: theme.spacing(2),
   display: 'flex',
   flexDirection: 'column',
+  position: 'relative',
 }));
 
 const EditorTracksScrollable = styled('div')(({ theme }) => ({
   overflow: 'hidden scroll',
+  scrollbarGutter: 'stable',
   flexBasis: 0,
   flexGrow: 1,
   paddingRight: theme.spacing(1),
@@ -51,6 +61,8 @@ const WaveformTile = styled(InstrumentTile)(() => ({
 }));
 
 interface EditorTrackProps {
+  stemId: number;
+  stemOrdinal: number;
   instrument: string;
   name: string;
 }
@@ -69,21 +81,39 @@ function EditorTrack(props: EditorTrackProps) {
   );
 }
 
+interface StemData {
+  id: number;
+  name: string;
+  instrument: string;
+  path: string;
+  samples: number;
+  gainDecibels: number;
+  offset: number;
+}
+
 function EditorTracks() {
+  const { slug } = useParams();
+  const axios = useAxios();
+  const data = useQueryData(['stems', slug]);
+
+  const sortedStems: StemData[] = useMemo(() => data, [data]);
+
   return (
     <EditorTracksContainer>
+      <Timeline />
       <EditorTracksScrollable>
-        <EditorTrack instrument='keys-lead' name='0' />
-        <EditorTrack instrument='keys-lead' name='1' />
-        <EditorTrack instrument='keys-lead' name='2' />
-        <EditorTrack instrument='keys-lead' name='3' />
-        <EditorTrack instrument='keys-lead' name='4' />
-        <EditorTrack instrument='keys-lead' name='5' />
-        <EditorTrack instrument='keys-lead' name='6' />
-        <EditorTrack instrument='keys-lead' name='7' />
-        <EditorTrack instrument='keys-lead' name='8' />
-        <EditorTrack instrument='keys-lead' name='9' />
+        {
+          sortedStems.map((stem: StemData, index: number) => (
+            <EditorTrack 
+              key={stem.id} 
+              stemId={stem.id}
+              stemOrdinal={index}
+              instrument={stem.instrument} 
+              name={stem.name}/>
+          ))
+        }
       </EditorTracksScrollable>
+      <PlaybackIndicator />
     </EditorTracksContainer>
   )
 }

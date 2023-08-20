@@ -1,12 +1,13 @@
 #pragma once
 #include <array>
+#include <functional>
 
 /**
  * \class
  * 
  * \brief A template class that implements a simple FIR filter
  * 
- * @tparam taps number of taps the filter has (and its internal history
+ * \tparam taps number of taps the filter has (and its internal history
  *              buffer size)
  */
 template <unsigned long taps>
@@ -29,13 +30,16 @@ public:
         // Convolve
         float output_sample = 0.f;
         int current_history_index = _history_index;
-        for (int i = 0; i < taps; ++i) {
+
+        // We prefer speed over binary size
+        loop_unroll<taps>([&](int i) {
             output_sample += _coeffs[i] * _history[current_history_index--];
 
             if (current_history_index < 0) { // This should be faster than modulo
                 current_history_index += taps;
             }
-        }
+        });
+
         return output_sample;
     }
 
@@ -43,4 +47,13 @@ private:
     std::array<float, taps> _coeffs;
     std::array<float, taps> _history;
     int _history_index;
+
+    template <int N, typename FunType, int i = 0>
+    void loop_unroll(FunType loop_body) {
+        if constexpr (i < N) {
+            loop_body(i);
+            loop_unroll<N, FunType, i + 1>(loop_body);
+        }
+    }
+
 };

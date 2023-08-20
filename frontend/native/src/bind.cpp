@@ -27,5 +27,7 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("getTrackBpm", &Mixer::track_bpm)
         .function("getLeftChannelOutDb", &Mixer::left_channel_out_db)
         .function("getRightChannelOutDb", &Mixer::right_channel_out_db)
+        .function("setTrackLength", &Mixer::set_track_length)
+        .function("getTrackLength", &Mixer::track_length)
         ;
 }

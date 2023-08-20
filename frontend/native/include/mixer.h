@@ -1,4 +1,6 @@
 #pragma once
+#include <spin-lock.h>
+
 #include <memory>
 #include <thread>
 
@@ -38,6 +40,8 @@ public:
     double track_bpm() const;
     double left_channel_out_db() const;
     double right_channel_out_db() const;
+    void set_track_length(uint32_t samples);
+    uint32_t track_length() const;
 
 private:
     enum class PlaybackState {
@@ -50,12 +54,15 @@ private:
     std::shared_ptr<AudioBuffer> _buffer;
     std::atomic<PlaybackState> _state;
     std::atomic<uint32_t> _playback_position;
+    std::atomic<uint32_t> _length;
 
     std::unique_ptr<PeakMeter> _master_level;
     std::unique_ptr<Metronome> _metronome;
     std::atomic_bool _metronome_enabled;
     std::atomic<double> _metronome_gain_db;
     std::atomic<double> _bpm;
+
+    SpinLock _mixdown_lock;
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);

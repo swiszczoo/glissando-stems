@@ -7,7 +7,14 @@ export const AxiosContext = createContext<AxiosInstance>(axios.create());
 
 function AxiosContextProvider(props: React.PropsWithChildren<object>) {
   const axiosInstance = useMemo(() => axios.create({ withCredentials: true }), []);
-  const queryClient = useMemo(() => new QueryClient(), []);
+  const queryClient = useMemo(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
+      },
+    },
+  }), []);
   return (
     <AxiosContext.Provider value={axiosInstance}>
       <QueryClientProvider client={queryClient}>
