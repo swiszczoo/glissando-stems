@@ -115,6 +115,22 @@ export class SongService {
     return count;
   }
 
+  async getReadyStemsBySong(song: Song): Promise<Stem[]> {
+    const stems = await this.stemRepository.findBy({ songId: song.id });
+    return stems;
+  }
+
+  async getReadyStemBySongAndId(
+    song: Song,
+    stemId: number,
+  ): Promise<Stem | undefined> {
+    const stem = await this.stemRepository.findOneBy({
+      songId: song.id,
+      id: stemId,
+    });
+    return stem || undefined;
+  }
+
   samplesToSeconds(samples: number): number {
     return samples / this.configService.get('PROJECT_SAMPLE_RATE');
   }

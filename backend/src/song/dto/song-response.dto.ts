@@ -6,6 +6,7 @@ export class SongResponseDto {
   title: string;
   bpm: number;
   duration: number;
+  samples: number;
   stemCount: number;
   form: { bar: number; name: string }[];
 
@@ -19,6 +20,7 @@ export class SongResponseDto {
       title: entity.title,
       bpm: entity.bpm,
       duration: samplesToSeconds(entity.samples),
+      samples: entity.samples,
       stemCount: entity.stemCount,
       form: entity.form,
     };

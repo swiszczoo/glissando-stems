@@ -19,6 +19,7 @@ import { Roles } from '../common/roles.decorator';
 
 import { SongCreateDto } from './dto/song-create.dto';
 import { SongResponseDto } from './dto/song-response.dto';
+import { StemResponseDto } from './dto/stem-response.dto';
 
 @Controller('songs')
 export class SongController {
@@ -117,5 +118,75 @@ export class SongController {
     if (count != 1) {
       throw this.exceptions.NOT_FOUND;
     }
+  }
+
+  @Get(':id/stems')
+  @Roles(Role.User, Role.Admin)
+  async findAllStems(
+    @Session() session: SessionData,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<StemResponseDto[]> {
+    const song = await this.service.getSongByBand(session.bandId, id);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const stems = await this.service.getReadyStemsBySong(song);
+    return stems.map(StemResponseDto.entityToDto);
+  }
+
+  @Get(':id/stems/:stemId')
+  @Roles(Role.User, Role.Admin)
+  async findOneStem(
+    @Session() session: SessionData,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('stemId', ParseIntPipe) stemId: number,
+  ): Promise<StemResponseDto> {
+    const song = await this.service.getSongByBand(session.bandId, id);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const stem = await this.service.getReadyStemBySongAndId(song, stemId);
+    if (!stem) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    return StemResponseDto.entityToDto(stem);
+  }
+
+  @Get('by-slug/:slug/stems')
+  @Roles(Role.User, Role.Admin)
+  async findAllStemsBySlug(
+    @Session() session: SessionData,
+    @Param('slug') slug: string,
+  ): Promise<StemResponseDto[]> {
+    const song = await this.service.getSongByBandBySlug(session.bandId, slug);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const stems = await this.service.getReadyStemsBySong(song);
+    return stems.map(StemResponseDto.entityToDto);
+  }
+
+  @Get('by-slug/:slug/stems/:stemId')
+  @Roles(Role.User, Role.Admin)
+  async findOneStemBySlug(
+    @Session() session: SessionData,
+    @Param('slug') slug: string,
+    @Param('stemId', ParseIntPipe) stemId: number,
+  ): Promise<StemResponseDto> {
+    const song = await this.service.getSongByBandBySlug(session.bandId, slug);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const stem = await this.service.getReadyStemBySongAndId(song, stemId);
+    if (!stem) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    return StemResponseDto.entityToDto(stem);
   }
 }

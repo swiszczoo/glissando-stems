@@ -179,6 +179,9 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
             _metronome->process(_playback_position);
         }
     }
+    if (_state == PlaybackState::STOPPED) {
+        _master_level->reset();
+    }
 
     _metronome->render(chunk);
     _master_level->process(chunk);

@@ -177,6 +177,12 @@ public:
             process_sample(chunk.right_channel[i], _right_lpf, _right_peak);
         }
     }
+
+    void reset()
+    {
+        _left_peak = 0.0;
+        _right_peak = 0.0;
+    }
 };
 
 PeakMeter::PeakMeter()
@@ -200,3 +206,9 @@ void PeakMeter::process(const audio_chunk& chunk)
 {
     _pimpl->process(chunk);
 }
+
+void PeakMeter::reset()
+{
+    _pimpl->reset();
+}
+

@@ -12,6 +12,7 @@ public:
     double left_db() const;
     double right_db() const;
     void process(const audio_chunk& chunk);
+    void reset();
 
 private:
     static const double DESCENT_RATE;

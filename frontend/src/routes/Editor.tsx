@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Logo from '../assets/logo.svg';
 
 import EditorNavbar from '../components/EditorNavbar';
+import EditorTracks from '../components/EditorTracks';
 import LoadingBar from '../components/LoadingBar';
 import PeakMeter from '../components/PeakMeter';
 import SolidBackgroundFrame from '../components/SolidBackgroundFrame';
@@ -73,7 +74,7 @@ function EditorContent(props: EditorContentProps) {
     <>
       <EditorNavbar songTitle={title} songBpm={bpm}/>
       <ContentContainer>
-        <span style={{ flexGrow: 1 }} />
+        <EditorTracks/>
         <PeakMeter />
       </ContentContainer>
     </>
