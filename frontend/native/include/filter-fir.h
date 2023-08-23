@@ -46,7 +46,7 @@ public:
 private:
     std::array<float, taps> _coeffs;
     std::array<float, taps> _history;
-    int _history_index;
+    unsigned long _history_index;
 
     template <int N, typename FunType, int i = 0>
     void loop_unroll(FunType loop_body) {

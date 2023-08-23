@@ -1,0 +1,6 @@
+[submodule "frontend/native/lib/cpp-base64"]
+	path = frontend/native/lib/cpp-base64
+	url = https://github.com/ReneNyffenegger/cpp-base64
+[submodule "frontend/native/lib/lodepng"]
+	path = frontend/native/lib/lodepng
+	url = https://github.com/lvandeve/lodepng

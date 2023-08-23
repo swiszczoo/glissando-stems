@@ -139,7 +139,6 @@ private:
 
         peak *= PeakMeter::DESCENT_RATE;
         float this_peak = std::abs(sample);
-        float temp;
         
         // Oversample 4x and put into LPF
         this_peak = std::max(this_peak, std::abs(filter(sample)));

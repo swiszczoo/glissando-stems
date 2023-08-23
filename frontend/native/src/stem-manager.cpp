@@ -157,12 +157,19 @@ void StemManager::process_stem(StemEntryPtr stem)
         return;
     }
 
+    if (stem->deleted) {
+        emscripten_fetch_close(fetch);
+        return;
+    }
+
     std::cout << "Thread " << std::this_thread::get_id()
               << ": Download finished. Got " << fetch->numBytes << " bytes. " 
               << "Starting vorbis decoder..." << std::endl;
 
     bool vorbis_ok = decode_vorbis_stream(stem, fetch->data, fetch->numBytes);
     emscripten_fetch_close(fetch);
+
+    if (stem->deleted) return;
 
     if (vorbis_ok) {
         std::cout << "Thread " << std::this_thread::get_id()

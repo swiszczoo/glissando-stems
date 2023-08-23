@@ -19,6 +19,12 @@ struct stem_info {
     double pan;
 };
 
+/**
+ * \class
+ * 
+ * \brief This class is responsible for project stem management. It fires off
+ *        background tasks, handles mute/solo actions and mixes audio.
+ */
 class StemManager {
 public:
     StemManager();
@@ -32,7 +38,11 @@ private:
         std::atomic_bool data_ready;
         std::atomic_bool deleted;
         std::atomic_bool error;
-        std::string data_block;
+
+        // do not use this string, it only owns 
+        // a binary data block, use `.data` instead
+        std::string data_block; 
+        
         const int16_t* data;
         std::atomic<uint32_t> waveform_ordinal;
         std::string waveform_base64;
