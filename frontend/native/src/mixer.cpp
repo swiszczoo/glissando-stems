@@ -145,6 +145,11 @@ uint32_t Mixer::track_length() const
     return _length;
 }
 
+void Mixer::update_stem_info(const std::vector<stem_info>& info)
+{
+    _manager.update_stem_info(info);
+}
+
 void Mixer::thread_main()
 {
     int last_underflows = _buffer->underflow_count();
@@ -188,16 +193,15 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
     PlaybackState state = _state;
 
     if (state == PlaybackState::PLAYING) {
-
-        for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
-            ++position;
-        }
+        _manager.render(position, chunk);
         
         if (_metronome_enabled) {
             _metronome->set_bpm(_bpm);
             _metronome->set_gain(Utils::decibelsToGain(_metronome_gain_db));
-            _metronome->process(_playback_position);
+            _metronome->process(position);
         }
+
+        position += AUDIO_CHUNK_SAMPLES;
     }
     if (state == PlaybackState::STOPPED) {
         _master_level->reset();

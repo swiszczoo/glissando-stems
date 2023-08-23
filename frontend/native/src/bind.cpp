@@ -1,4 +1,5 @@
 #include <mixer.h>
+#include <stem-manager.h>
 
 #include <emscripten/bind.h>
 
@@ -29,5 +30,15 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("getRightChannelOutDb", &Mixer::right_channel_out_db)
         .function("setTrackLength", &Mixer::set_track_length)
         .function("getTrackLength", &Mixer::track_length)
+        .function("updateStemInfo", &Mixer::update_stem_info)
         ;
+    value_object<stem_info>("StemInfo")
+        .field("id", &stem_info::id)
+        .field("path", &stem_info::path)
+        .field("samples", &stem_info::samples)
+        .field("offset", &stem_info::offset)
+        .field("gainDb", &stem_info::gain_db)
+        .field("pan", &stem_info::pan)
+        ;
+    register_vector<stem_info>("VectorStemInfo");
 }

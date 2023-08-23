@@ -1,15 +1,15 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
 import { styled } from '@mui/system';
-import { useQuery } from '@tanstack/react-query';
 
 import InstrumentTile from './InstrumentTile';
 import MuteSolo from './MuteSolo';
 import PlaybackIndicator from './PlaybackIndicator';
 import Timeline from './Timeline';
 
-import { useAxios } from '../hooks/useAxios';
+import { useNative } from '../hooks/useNative';
 import { useQueryData } from '../hooks/useQueryData';
+import { useSession } from '../hooks/useSession';
 
 const EditorTracksContainer = styled('div')(({ theme }) => ({
   flexGrow: 1,
@@ -91,12 +91,33 @@ interface StemData {
   offset: number;
 }
 
+function stemDataToStemInfo(pathPrefix: string, data: StemData): StemInfo {
+  return {
+    id: data.id,
+    gainDb: data.gainDecibels,
+    offset: data.offset,
+    pan: 0,
+    path: pathPrefix + '/' + data.path,
+    samples: data.samples,
+  };
+}
+
 function EditorTracks() {
   const { slug } = useParams();
-  const axios = useAxios();
-  const data = useQueryData(['stems', slug]);
+  const [ native, ] = useNative();
+  const data = useQueryData(['stems', slug]) as StemData[];
+  const { stemLocationPrefix } = useSession();
 
-  const sortedStems: StemData[] = useMemo(() => data, [data]);
+  const sortedStems = useMemo(() => data, [data]);
+
+  useEffect(() => {
+    const vector = new window.Module.VectorStemInfo();
+
+    data.forEach((item) => vector.push_back(stemDataToStemInfo(stemLocationPrefix!, item)));
+
+    native!.updateStemInfo(vector);
+    vector.delete();
+  }, [data, native, stemLocationPrefix]);
 
   return (
     <EditorTracksContainer>

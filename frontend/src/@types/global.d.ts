@@ -6,6 +6,16 @@ interface Window {
   Module: EmscriptenModule;
 }
 
+// Corresponding definition in frontend/native/include/stem-manager.h
+interface StemInfo {
+  id: number;
+  path: string;
+  samples: number;
+  offset: number;
+  gainDb: number;
+  pan: number;
+}
+
 interface NativeMixer {
   testJsBinding: () => number;
   play: () => void;
@@ -27,4 +37,5 @@ interface NativeMixer {
   getRightChannelOutDb: () => number;
   setTrackLength: (samples: number) => void;
   getTrackLength: () => number;
+  updateStemInfo: (info: StemInfo[]) => void;
 }

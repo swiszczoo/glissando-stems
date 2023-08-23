@@ -1,5 +1,6 @@
 #pragma once
 #include <spin-lock.h>
+#include <stem-manager.h>
 
 #include <memory>
 #include <thread>
@@ -42,6 +43,7 @@ public:
     double right_channel_out_db() const;
     void set_track_length(uint32_t samples);
     uint32_t track_length() const;
+    void update_stem_info(const std::vector<stem_info>& info);
 
 private:
     enum class PlaybackState {
@@ -63,6 +65,8 @@ private:
     std::atomic<double> _bpm;
 
     SpinLock _mixdown_lock;
+
+    StemManager _manager;
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);
