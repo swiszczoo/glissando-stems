@@ -163,12 +163,12 @@ public:
 
     double left_db() const
     {
-        return Utils::gainToDecibels(_left_peak);
+        return Utils::gain_to_decibels(_left_peak);
     }
 
     double right_db() const
     {
-        return Utils::gainToDecibels(_right_peak);
+        return Utils::gain_to_decibels(_right_peak);
     }
 
     void process(const audio_chunk& chunk)

@@ -2,6 +2,7 @@ interface Window {
   audioContext?: AudioContext;
   audioLimiter?: DynamicsCompressorNode;
   _wasmInitialized?: () => void;
+  _invalidateModuleContext?: () => void;
   
   Module: EmscriptenModule;
 }
@@ -38,4 +39,6 @@ interface NativeMixer {
   setTrackLength: (samples: number) => void;
   getTrackLength: () => number;
   updateStemInfo: (info: StemInfo[]) => void;
+  getWaveformOrdinal: (stemId: number) => number;
+  getWaveformDataUri: (stemId: number) => string;
 }

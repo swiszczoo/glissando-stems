@@ -37,6 +37,13 @@ private:
     int16_t _silence_threshold;
     uint32_t _silence_min_length;
 
+    void process_waveform(pixel* image, int32_t offset, uint32_t total_length,
+        const int16_t* samples, uint32_t num_samples);
+    void process_silence(pixel* image, int32_t offset, uint32_t total_length,
+        const int16_t* samples, uint32_t num_samples);
+    void draw_silence(pixel* image, uint32_t total_length, int& column, 
+        uint32_t silence_start, uint32_t silence_end);
+    void blend_pixel(pixel& src, const pixel& over);
     std::pair<int16_t, int16_t> get_column_peaks(uint32_t start_sample, uint32_t end_sample,
         int32_t offset, const int16_t* samples, uint32_t num_samples);
     uint32_t get_column_end_sample(int x, uint32_t total_length) const;

@@ -3,7 +3,9 @@
 #include <audio-buffer.h>
 #include <stb_vorbis.h>
 #include <utils.h>
+#include <waveform-renderer.h>
 
+#include <base64.h>
 #include <emscripten/fetch.h>
 
 #include <cassert>
@@ -15,11 +17,41 @@
 const float StemManager::SHORT_TO_FLOAT = 1 / 32768.f;
 
 StemManager::StemManager()
+    : _length(0)
 {
+}
+
+void StemManager::set_track_length(uint32_t samples)
+{
+    _length = samples;
+}
+
+uint32_t StemManager::track_length() const
+{
+    return _length;
+}
+
+uint32_t StemManager::waveform_ordinal(uint32_t stem_id) const
+{
+    auto it = _stems.find(stem_id);
+
+    if (it == _stems.end()) return 0;
+    return it->second->waveform_ordinal;
+}
+
+std::string StemManager::waveform_data_uri(uint32_t stem_id) const
+{
+    auto it = _stems.find(stem_id);
+
+    if (it == _stems.end()) return "";
+
+    std::lock_guard lock(it->second->mutex);
+    return it->second->waveform_base64;
 }
 
 void StemManager::render(uint32_t first_sample, audio_chunk& chunk)
 {
+    std::lock_guard main_lock(_mutex);
     for (const auto& stem : _stems) {
         auto stem_ptr = stem.second;
         if (!stem_ptr->data_ready || stem_ptr->deleted) {
@@ -29,7 +61,7 @@ void StemManager::render(uint32_t first_sample, audio_chunk& chunk)
         std::lock_guard lock(stem_ptr->mutex);
         int stem_sample = first_sample - stem_ptr->info.offset;
         int stem_length = stem_ptr->info.samples;
-        float gain = Utils::decibelsToGain(stem_ptr->info.gain_db);
+        float gain = Utils::decibels_to_gain(stem_ptr->info.gain_db);
         float pan = stem_ptr->info.pan;
         if (pan < -1.f) pan = -1.f;
         if (pan > 1.f) pan = 1.f;
@@ -128,13 +160,21 @@ auto StemManager::create_stem_from_info(const stem_info& info) -> StemEntryPtr
 
 void StemManager::run_stem_processing(StemEntryPtr stem)
 {
-    std::thread thread(std::bind(&StemManager::process_stem, this, stem));
+    std::thread thread([this, stem]() {
+        process_stem(stem);
+        Utils::refresh_js_side_from_bg_task();
+    });
+
     thread.detach();
 }
 
 void StemManager::run_waveform_processing(StemEntryPtr stem)
 {
-    std::thread thread(std::bind(&StemManager::process_stem_waveform, this, stem));
+    std::thread thread([this, stem]() {
+        process_stem_waveform(stem);
+        Utils::refresh_js_side_from_bg_task();
+    });
+    
     thread.detach();
 }
 
@@ -176,6 +216,8 @@ void StemManager::process_stem(StemEntryPtr stem)
                   << ": Vorbis data has been decoded." << std::endl;
         stem->data_ready = true;
         process_stem_waveform(stem);
+        std::cout << "Thread " << std::this_thread::get_id()
+                  << ": Initial waveform image has been generated." << std::endl;
     } else {
         std::cerr << "Thread " << std::this_thread::get_id() 
                   << ": Vorbis decoding failed!" << std::endl;
@@ -218,5 +260,28 @@ void StemManager::process_stem_waveform(StemEntryPtr stem)
     if (!stem->data_ready) {
         assert(false);
         return;
+    }
+
+    WaveformRenderer renderer;
+    renderer.set_silence_min_length(44100);
+    renderer.set_silence_alpha(140);
+
+    int32_t stem_offset;
+    uint32_t track_length = _length;
+    {
+        std::lock_guard lock(stem->mutex);
+        stem_offset = stem->info.offset;
+    }
+
+    auto png = renderer.render_waveform_to_png(
+        stem_offset, track_length, stem->data, stem->info.samples);
+    std::string data_uri = "data:image/png;base64," + base64_encode(png.data(), png.size());
+    
+    {
+        std::lock_guard lock(stem->mutex);
+        if (stem->info.offset == stem_offset && _length == track_length) {
+            stem->waveform_base64 = std::move(data_uri);
+            stem->waveform_ordinal++;
+        }
     }
 }

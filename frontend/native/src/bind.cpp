@@ -31,6 +31,8 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("setTrackLength", &Mixer::set_track_length)
         .function("getTrackLength", &Mixer::track_length)
         .function("updateStemInfo", &Mixer::update_stem_info)
+        .function("getWaveformOrdinal", &Mixer::waveform_ordinal)
+        .function("getWaveformDataUri", &Mixer::waveform_data_uri)
         ;
     value_object<stem_info>("StemInfo")
         .field("id", &stem_info::id)

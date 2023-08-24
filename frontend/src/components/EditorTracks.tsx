@@ -60,6 +60,13 @@ const WaveformTile = styled(InstrumentTile)(() => ({
   flexGrow: 1,
 }));
 
+const WaveformView = styled('img')(() => ({
+  position: 'absolute',
+  width: '100%',
+  height: '100%',
+  imageRendering: 'crisp-edges',
+}));
+
 interface EditorTrackProps {
   stemId: number;
   stemOrdinal: number;
@@ -68,6 +75,18 @@ interface EditorTrackProps {
 }
 
 function EditorTrack(props: EditorTrackProps) {
+  const [ native, ] = useNative();
+  const waveformOrdinal = native!.getWaveformOrdinal(props.stemId);
+
+  const waveformDataUri = useMemo(() => {
+    waveformOrdinal;
+    return native!.getWaveformDataUri(props.stemId)
+  }, [native, waveformOrdinal, props.stemId]);
+
+  const waveformView = useMemo(() => <>
+    { waveformDataUri.length > 0 && <WaveformView src={waveformDataUri} /> }
+  </>, [waveformDataUri]);
+
   return (
     <TrackContainer>
       <TrackTile instrument={props.instrument} icon title={props.name}>
@@ -76,7 +95,9 @@ function EditorTrack(props: EditorTrackProps) {
       <span style={{ width: 8 }} />
       <MuteSolo/>
       <span style={{ width: 8 }} />
-      <WaveformTile instrument={props.instrument}/>
+      <WaveformTile instrument={props.instrument}>
+        { waveformView }
+      </WaveformTile>
     </TrackContainer>
   );
 }

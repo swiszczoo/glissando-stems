@@ -138,6 +138,7 @@ double Mixer::right_channel_out_db() const
 void Mixer::set_track_length(uint32_t samples)
 {
     _length = samples;
+    _manager.set_track_length(samples);
 }
 
 uint32_t Mixer::track_length() const
@@ -148,6 +149,16 @@ uint32_t Mixer::track_length() const
 void Mixer::update_stem_info(const std::vector<stem_info>& info)
 {
     _manager.update_stem_info(info);
+}
+
+uint32_t Mixer::waveform_ordinal(uint32_t stem_id) const
+{
+    return _manager.waveform_ordinal(stem_id);
+}
+
+std::string Mixer::waveform_data_uri(uint32_t stem_id) const
+{
+    return _manager.waveform_data_uri(stem_id);
 }
 
 void Mixer::thread_main()
@@ -197,7 +208,7 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
         
         if (_metronome_enabled) {
             _metronome->set_bpm(_bpm);
-            _metronome->set_gain(Utils::decibelsToGain(_metronome_gain_db));
+            _metronome->set_gain(Utils::decibels_to_gain(_metronome_gain_db));
             _metronome->process(position);
         }
 

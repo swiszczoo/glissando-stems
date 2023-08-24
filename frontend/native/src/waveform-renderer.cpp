@@ -2,8 +2,10 @@
 
 #include <lodepng.h>
 
+#include <iostream>
+
 #define SAMPLE_MAX 32767
-#define SAMPLE_MIX -32768
+#define SAMPLE_MIN -32768
 
 
 WaveformRenderer::WaveformRenderer()
@@ -17,7 +19,7 @@ WaveformRenderer::WaveformRenderer(int width, int height)
     , _color_blue(255)
     , _color_alpha(255)
     , _silence_alpha(128)
-    , _silence_threshold(256)
+    , _silence_threshold(1024)
     , _silence_min_length(100000)
 {
 }
@@ -88,7 +90,19 @@ std::vector<uint8_t> WaveformRenderer::render_waveform_to_png(
         image[i].red = image[i].green = image[i].blue = image[i].alpha = 0;
     }
 
+    process_waveform(image.get(), offset, total_length, samples, num_samples);
+    process_silence(image.get(), offset, total_length, samples, num_samples);
+
+    std::vector<uint8_t> png;
+    lodepng::encode(png, reinterpret_cast<uint8_t*>(image.get()), _output_width, _output_height);
+    return png;
+}
+
+void WaveformRenderer::process_waveform(pixel* image, int32_t offset, 
+    uint32_t total_length, const int16_t* samples, uint32_t num_samples)
+{
     uint32_t start_sample = 0;
+
     for (int x = 0; x < _output_width; ++x) {
         uint32_t end_sample = get_column_end_sample(x, total_length);
         auto [hi_peak, low_peak] = get_column_peaks(
@@ -108,10 +122,77 @@ std::vector<uint8_t> WaveformRenderer::render_waveform_to_png(
 
         start_sample = end_sample;
     }
+}
 
-    std::vector<uint8_t> png;
-    lodepng::encode(png, reinterpret_cast<uint8_t*>(image.get()), _output_width, _output_height);
-    return png;
+void WaveformRenderer::process_silence(pixel* image, int32_t offset, 
+    uint32_t total_length, const int16_t* samples, uint32_t num_samples)
+{
+    uint32_t silence_start = 0;
+    int current_column = 0;
+
+    for (uint32_t sample = 0; sample < total_length; ++sample) {
+        int32_t stem_sample = sample + offset;
+        bool is_silence = false;
+
+        if (stem_sample < 0 || stem_sample >= static_cast<int32_t>(num_samples)) {
+            is_silence = true;
+        } else {
+            int16_t left = samples[2 * sample];
+            int16_t right = samples[2 * sample + 1];
+
+            is_silence = std::abs(left) < _silence_threshold 
+                       && std::abs(right) < _silence_threshold;
+        }
+
+        if (!is_silence) {
+            uint32_t silence_length = sample - silence_start;
+            if (silence_length >= _silence_min_length) {
+                draw_silence(image, total_length, 
+                    current_column, silence_start, sample);
+            }
+
+            silence_start = sample + 1;
+        }
+    }
+
+    uint32_t silence_length = total_length - silence_start;
+    if (silence_length >= _silence_min_length) {
+        draw_silence(image, total_length, 
+            current_column, silence_start, total_length);
+    }
+}
+
+void WaveformRenderer::draw_silence(pixel* image, uint32_t total_length, int& column, 
+    uint32_t silence_start, uint32_t silence_end)
+{
+    uint32_t column_start = column == 0 ? 0 : get_column_end_sample(column - 1, total_length);
+    uint32_t column_end = get_column_end_sample(column, total_length);
+
+    pixel over = { 0, 0, 0, _silence_alpha };
+
+    while (column_end < silence_end) {
+        if (silence_start <= column_start) {
+            for (int y = 0; y < _output_height; ++y) {
+                blend_pixel(image[y * _output_width + column], over);
+            }
+        }
+
+        ++column;
+        column_start = column_end;
+        column_end = get_column_end_sample(column, total_length);
+    }
+}
+
+void WaveformRenderer::blend_pixel(pixel& src, const pixel& over)
+{
+    float over_alpha = over.alpha / 255.f;
+    float src_alpha = src.alpha / 255.f;
+    float alpha = over_alpha + src_alpha * (1.f - over_alpha);
+
+    src.alpha = static_cast<uint8_t>(round(alpha * 255.f));
+    src.red = (over.red * over_alpha + src.red * src_alpha * (1.f - over_alpha)) / alpha;
+    src.green = (over.green * over_alpha + src.green * src_alpha * (1.f - over_alpha)) / alpha;
+    src.blue = (over.blue * over_alpha + src.blue * src_alpha * (1.f - over_alpha)) / alpha;
 }
 
 std::pair<int16_t, int16_t> WaveformRenderer::get_column_peaks(uint32_t start_sample, 
@@ -121,7 +202,7 @@ std::pair<int16_t, int16_t> WaveformRenderer::get_column_peaks(uint32_t start_sa
         return std::make_pair(0, 0);
     }
 
-    int16_t hi_peak = SAMPLE_MIX, low_peak = SAMPLE_MAX;
+    int16_t hi_peak = SAMPLE_MIN, low_peak = SAMPLE_MAX;
     for (uint32_t sample = start_sample; sample < end_sample; ++sample) {
         int32_t stem_sample = sample + offset;
         if (stem_sample < 0) continue;

@@ -14,7 +14,7 @@ struct stem_info {
     uint32_t id;
     std::string path;
     uint32_t samples;
-    uint32_t offset;
+    int32_t offset;
     double gain_db;
     double pan;
 };
@@ -28,6 +28,12 @@ struct stem_info {
 class StemManager {
 public:
     StemManager();
+
+    void set_track_length(uint32_t samples);
+    uint32_t track_length() const;
+
+    uint32_t waveform_ordinal(uint32_t stem_id) const;
+    std::string waveform_data_uri(uint32_t stem_id) const;
 
     void render(uint32_t first_sample, audio_chunk& chunk);
     void update_stem_info(const std::vector<stem_info>& info);
@@ -52,7 +58,8 @@ private:
 
     static const float SHORT_TO_FLOAT;
 
-    std::mutex _mutex;
+    mutable std::mutex _mutex;
+    std::atomic<uint32_t> _length;
     std::unordered_map<uint32_t, StemEntryPtr> _stems;
 
     void erase_unused_stems(const std::vector<stem_info>& info);

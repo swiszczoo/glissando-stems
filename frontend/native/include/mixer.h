@@ -45,6 +45,9 @@ public:
     uint32_t track_length() const;
     void update_stem_info(const std::vector<stem_info>& info);
 
+    uint32_t waveform_ordinal(uint32_t stem_id) const;
+    std::string waveform_data_uri(uint32_t stem_id) const;
+
 private:
     enum class PlaybackState {
       PLAYING,

@@ -1,13 +1,22 @@
-import { createContext, useCallback, useMemo, useRef, useState } from 'react';
+import { 
+  createContext, 
+  useCallback, 
+  useEffect, 
+  useMemo, 
+  useRef, 
+  useState 
+} from 'react';
 
 export const WasmContext = createContext<WasmContextType>({
   module: undefined,
+  monotonic: -1,
   ensureModuleIsLoaded: () => false,
   invalidateState: () => {},
 });
 
 interface WasmContextType {
   module: EmscriptenModule | undefined,
+  monotonic: number;
   ensureModuleIsLoaded: () => boolean,
   invalidateState: () => void,
 }
@@ -38,6 +47,7 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
 
     return {
       module: instance,
+      monotonic: inv,
       ensureModuleIsLoaded: () => {
         if (instance !== undefined) return true;
 
@@ -49,7 +59,13 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
 
       invalidateState,
     };
-  }, [instance, inv]);
+  }, [instance, inv, invalidateState]);
+
+  useEffect(() => {
+    window._invalidateModuleContext = invalidateState;
+
+    return () => window._invalidateModuleContext = undefined;
+  }, [invalidateState]);
 
   return (
     <WasmContext.Provider value={contextValue}>
