@@ -58,7 +58,9 @@ private:
     std::thread _thread;
     std::shared_ptr<AudioBuffer> _buffer;
     std::atomic<PlaybackState> _state;
+    PlaybackState _last_state;
     std::atomic<uint32_t> _playback_position;
+    uint32_t _last_playback_position;
     std::atomic<uint32_t> _length;
 
     std::unique_ptr<PeakMeter> _master_level;
@@ -73,5 +75,7 @@ private:
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);
+    void apply_soft_start(audio_chunk& chunk);
+    void apply_soft_stop(audio_chunk& chunk);
     void invalidate_state();
 };

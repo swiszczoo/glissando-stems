@@ -19,7 +19,7 @@ export function withSeeking<P, T extends HTMLElement>(WrappedComponent: React.Co
     }, []);
 
     const handleMouseDown = useCallback((event: React.PointerEvent<T>) => {
-      if (wasPlaying.current !== undefined) {
+      if (wasPlaying.current !== undefined || event.button !== 0) {
         return;
       }
 

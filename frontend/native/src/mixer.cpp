@@ -15,7 +15,9 @@
 Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     : _buffer(std::move(out_buffer))
     , _state(PlaybackState::STOPPED)
+    , _last_state(PlaybackState::STOPPED)
     , _playback_position(0)
+    , _last_playback_position(0)
     , _length(0)
     , _master_level(std::make_unique<PeakMeter>())
     , _metronome(std::make_unique<Metronome>())
@@ -239,9 +241,46 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
         _master_level->reset();
     }
 
+    // This two routines should prevent audio clicking by performing
+    // a fade-in or a fade-out respectively
+    if (state == PlaybackState::PLAYING && _last_state == PlaybackState::PAUSED) {
+        apply_soft_start(chunk);
+    } else if (state == PlaybackState::PAUSED && _last_state == PlaybackState::PLAYING) {
+        // render last frame to make a fade-out frame 
+        // (state != PLAYING so it wasn't rendered yet)
+        _manager.render(_last_playback_position, chunk); 
+
+        apply_soft_stop(chunk);
+    }
+
     _metronome->render(chunk);
     _master_level->process(chunk);
     _playback_position = position;
+
+    _last_state = state;
+    _last_playback_position = position;
+}
+
+void Mixer::apply_soft_start(audio_chunk& chunk)
+{
+    for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
+        float factor = static_cast<float>(i) / AUDIO_CHUNK_SAMPLES;
+        factor *= factor;
+
+        chunk.left_channel[i] *= factor;
+        chunk.right_channel[i] *= factor;
+    }
+}
+
+void Mixer::apply_soft_stop(audio_chunk& chunk)
+{
+    for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
+        float factor = 1.f - static_cast<float>(i) / AUDIO_CHUNK_SAMPLES;
+        factor *= factor;
+
+        chunk.left_channel[i] *= factor;
+        chunk.right_channel[i] *= factor;
+    }
 }
 
 void Mixer::invalidate_state()
