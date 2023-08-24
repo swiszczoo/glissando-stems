@@ -7,6 +7,8 @@ import MuteSolo from './MuteSolo';
 import PlaybackIndicator from './PlaybackIndicator';
 import Timeline from './Timeline';
 
+import { withSeeking } from './withSeeking';
+
 import { useNative } from '../hooks/useNative';
 import { useQueryData } from '../hooks/useQueryData';
 import { useSession } from '../hooks/useSession';
@@ -60,11 +62,30 @@ const WaveformTile = styled(InstrumentTile)(() => ({
   flexGrow: 1,
 }));
 
-const WaveformView = styled('img')(() => ({
+const WaveformView = withSeeking(styled('img')(() => ({
   position: 'absolute',
   width: '100%',
   height: '100%',
-  imageRendering: 'crisp-edges',
+  userSelect: 'none',
+})));
+
+const WaveformLoader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'row',
+  height: '100%',
+  background: `repeating-linear-gradient(45deg, #0006 0px, #0006 16px, #0004 16px, #0004 32px)`,
+  backgroundSize: 'calc(100% + 453px) 100%',
+  animation: 'stripesAnimation 7s linear infinite, breathingAnimation 2s ease-in-out infinite',
+  '& > div': {
+    background: 'rgba(0, 0, 0, 0.5)',
+    padding: `${theme.spacing(1)} ${theme.spacing(4)}`,
+    borderRadius: 32,
+    fontWeight: 700,
+    letterSpacing: 1,
+  },
+  pointerEvents: 'none',
 }));
 
 interface EditorTrackProps {
@@ -83,9 +104,10 @@ function EditorTrack(props: EditorTrackProps) {
     return native!.getWaveformDataUri(props.stemId)
   }, [native, waveformOrdinal, props.stemId]);
 
-  const waveformView = useMemo(() => <>
-    { waveformDataUri.length > 0 && <WaveformView src={waveformDataUri} /> }
-  </>, [waveformDataUri]);
+  const waveformView = useMemo(() => {
+    if (waveformDataUri.length > 0) return <WaveformView draggable={false} src={waveformDataUri} />;
+    else return <WaveformLoader><div>Przetwarzanie...</div></WaveformLoader>;
+  }, [waveformDataUri]);
 
   return (
     <TrackContainer>
@@ -94,7 +116,7 @@ function EditorTrack(props: EditorTrackProps) {
       </TrackTile>
       <span style={{ width: 8 }} />
       <MuteSolo/>
-      <span style={{ width: 8 }} />
+      <span style={{ width: 8 }}/>
       <WaveformTile instrument={props.instrument}>
         { waveformView }
       </WaveformTile>

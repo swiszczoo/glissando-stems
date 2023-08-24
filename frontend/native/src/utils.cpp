@@ -13,13 +13,3 @@ double Utils::gain_to_decibels(double gain)
 {
     return 20.0 * log10(gain);
 }
-
-void Utils::refresh_js_side_from_bg_task()
-{
-    MAIN_THREAD_EM_ASM({
-        if (window._invalidateModuleContext) {
-            window._invalidateModuleContext();
-        }
-    });
-}
-

@@ -114,7 +114,7 @@ interface EditorNavbarProps {
 }
 
 function EditorNavbar(props: EditorNavbarProps) {
-  const [ native, invalidateNative ] = useNative();
+  const [ native, ] = useNative();
   const state = native!.getPlaybackState();
 
   const handlePlay = () => {
@@ -123,7 +123,6 @@ function EditorNavbar(props: EditorNavbarProps) {
 
     native!.play();
     window.audioContext?.resume();
-    invalidateNative();
   };
 
   const handlePause = () => {
@@ -132,7 +131,6 @@ function EditorNavbar(props: EditorNavbarProps) {
 
     native!.pause();
     window.audioContext?.resume();
-    invalidateNative();
   }
 
   const handleStop = () => {
@@ -141,12 +139,10 @@ function EditorNavbar(props: EditorNavbarProps) {
 
     native!.stop();
     setTimeout(() => window.audioContext?.suspend(), 100);
-    invalidateNative();
   }
 
   const handleToggleMetronome = () => {
     native!.toggleMetronome();
-    invalidateNative();
   }
 
   return (

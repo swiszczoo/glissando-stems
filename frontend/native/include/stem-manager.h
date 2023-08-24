@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -35,6 +36,9 @@ public:
     uint32_t waveform_ordinal(uint32_t stem_id) const;
     std::string waveform_data_uri(uint32_t stem_id) const;
 
+    /* Bear in mind that the callback will be called from the worker thread! */
+    void set_bg_task_complete_callback(std::function<void()> callback);
+
     void render(uint32_t first_sample, audio_chunk& chunk);
     void update_stem_info(const std::vector<stem_info>& info);
 private:
@@ -58,17 +62,25 @@ private:
 
     static const float SHORT_TO_FLOAT;
 
+    /*
+     * Locking strategy: because concurrent reads from STL containers are
+     * thread safe, we will only be locking while writing to _stems map and 
+     * while reading in the background thread (we assume all writes are
+     * performed in the main thread)
+    */
     mutable std::mutex _mutex;
+
     std::atomic<uint32_t> _length;
     std::unordered_map<uint32_t, StemEntryPtr> _stems;
+    std::function<void()> _complete_cb;
 
     void erase_unused_stems(const std::vector<stem_info>& info);
     void update_or_add_stems(const std::vector<stem_info>& info);
     StemEntryPtr create_stem_from_info(const stem_info& info);
 
     void run_stem_processing(StemEntryPtr stem);
-    void run_waveform_processing(StemEntryPtr stem);
+    void run_waveform_processing(StemEntryPtr stem, uint32_t prev_ordinal);
     void process_stem(StemEntryPtr stem);
     bool decode_vorbis_stream(StemEntryPtr stem, const char* data, uint32_t data_size);
-    void process_stem_waveform(StemEntryPtr stem);
+    void process_stem_waveform(StemEntryPtr stem, uint32_t prev_ordinal);
 };

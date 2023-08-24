@@ -185,6 +185,8 @@ void WaveformRenderer::draw_silence(pixel* image, uint32_t total_length, int& co
 
 void WaveformRenderer::blend_pixel(pixel& src, const pixel& over)
 {
+    // https://en.wikipedia.org/wiki/Alpha_compositing
+    
     float over_alpha = over.alpha / 255.f;
     float src_alpha = src.alpha / 255.f;
     float alpha = over_alpha + src_alpha * (1.f - over_alpha);

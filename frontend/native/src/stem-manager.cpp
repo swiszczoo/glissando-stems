@@ -24,6 +24,23 @@ StemManager::StemManager()
 void StemManager::set_track_length(uint32_t samples)
 {
     _length = samples;
+
+    for (const auto& stem : _stems) {
+        auto stem_ptr = stem.second;
+        if (stem_ptr->data_ready) {
+            // If the stem is ready, invalidate its waveform image
+            // and run a new task to regenerate it
+
+            uint32_t prev_ordinal;
+            {
+                std::lock_guard lock(stem_ptr->mutex);
+                stem_ptr->waveform_base64.clear();
+                prev_ordinal = ++stem_ptr->waveform_ordinal;
+            }
+
+            run_waveform_processing(stem_ptr, prev_ordinal);
+        }
+    }
 }
 
 uint32_t StemManager::track_length() const
@@ -49,9 +66,14 @@ std::string StemManager::waveform_data_uri(uint32_t stem_id) const
     return it->second->waveform_base64;
 }
 
+void StemManager::set_bg_task_complete_callback(std::function<void()> callback)
+{
+    _complete_cb = callback;
+}
+
 void StemManager::render(uint32_t first_sample, audio_chunk& chunk)
 {
-    std::lock_guard main_lock(_mutex);
+    std::lock_guard main_lock(_mutex); // <-- this will be called from a worker thread
     for (const auto& stem : _stems) {
         auto stem_ptr = stem.second;
         if (!stem_ptr->data_ready || stem_ptr->deleted) {
@@ -99,7 +121,7 @@ void StemManager::erase_unused_stems(const std::vector<stem_info>& info)
         ids_to_remove.erase(stem.id);
     }
 
-    std::lock_guard lock(_mutex);
+    std::lock_guard lock(_mutex); // <-- write access
     for (uint32_t id : ids_to_remove) {
         _stems[id]->deleted = true;
         _stems.erase(id);
@@ -123,18 +145,29 @@ void StemManager::update_or_add_stems(const std::vector<stem_info>& info)
         // Redundantly check if something changed because the last thing we
         // want is to carelessly take the mutex and block the audio thread
         if (stem_ptr->info.gain_db != stem_info.gain_db
-            || stem_ptr->info.offset != stem_info.offset
             || stem_ptr->info.pan != stem_info.pan) {
 
             std::lock_guard lock(stem_ptr->mutex);
             stem_ptr->info.gain_db = stem_info.gain_db;
-            stem_ptr->info.offset = stem_info.offset;
             stem_ptr->info.pan = stem_info.pan;
+        }
+
+        // invalidate waveform image if offset changed
+        if (stem_ptr->info.offset != stem_info.offset) {
+            uint32_t prev_ordinal;
+            {
+                std::lock_guard lock(stem_ptr->mutex);
+                stem_ptr->info.offset = stem_info.offset;
+                stem_ptr->waveform_base64.clear();
+                prev_ordinal = ++stem_ptr->waveform_ordinal;
+            }
+
+            run_waveform_processing(stem_ptr, prev_ordinal);
         }
     }
 
     if (!stems_to_add.empty()) {
-        std::lock_guard lock(_mutex);
+        std::lock_guard lock(_mutex); // <-- write access
         for (StemEntryPtr& new_stem : stems_to_add) {
             _stems[new_stem->info.id] = new_stem;
         }
@@ -160,19 +193,23 @@ auto StemManager::create_stem_from_info(const stem_info& info) -> StemEntryPtr
 
 void StemManager::run_stem_processing(StemEntryPtr stem)
 {
-    std::thread thread([this, stem]() {
+    auto cb = _complete_cb;
+
+    std::thread thread([this, stem, cb]() {
         process_stem(stem);
-        Utils::refresh_js_side_from_bg_task();
+        cb();
     });
 
     thread.detach();
 }
 
-void StemManager::run_waveform_processing(StemEntryPtr stem)
+void StemManager::run_waveform_processing(StemEntryPtr stem, uint32_t prev_ordinal)
 {
-    std::thread thread([this, stem]() {
-        process_stem_waveform(stem);
-        Utils::refresh_js_side_from_bg_task();
+    auto cb = _complete_cb;
+
+    std::thread thread([this, stem, cb, prev_ordinal]() {
+        process_stem_waveform(stem, prev_ordinal);
+        cb();
     });
     
     thread.detach();
@@ -215,7 +252,7 @@ void StemManager::process_stem(StemEntryPtr stem)
         std::cout << "Thread " << std::this_thread::get_id()
                   << ": Vorbis data has been decoded." << std::endl;
         stem->data_ready = true;
-        process_stem_waveform(stem);
+        process_stem_waveform(stem, 0);
         std::cout << "Thread " << std::this_thread::get_id()
                   << ": Initial waveform image has been generated." << std::endl;
     } else {
@@ -255,7 +292,7 @@ bool StemManager::decode_vorbis_stream(
     return samples_processed == limit;
 }
 
-void StemManager::process_stem_waveform(StemEntryPtr stem)
+void StemManager::process_stem_waveform(StemEntryPtr stem, uint32_t prev_ordinal)
 {
     if (!stem->data_ready) {
         assert(false);
@@ -263,7 +300,6 @@ void StemManager::process_stem_waveform(StemEntryPtr stem)
     }
 
     WaveformRenderer renderer;
-    renderer.set_silence_min_length(44100);
     renderer.set_silence_alpha(140);
 
     int32_t stem_offset;
@@ -279,9 +315,9 @@ void StemManager::process_stem_waveform(StemEntryPtr stem)
     
     {
         std::lock_guard lock(stem->mutex);
-        if (stem->info.offset == stem_offset && _length == track_length) {
+        if (stem->waveform_ordinal == prev_ordinal) {
             stem->waveform_base64 = std::move(data_uri);
-            stem->waveform_ordinal++;
+            ++stem->waveform_ordinal;
         }
     }
 }

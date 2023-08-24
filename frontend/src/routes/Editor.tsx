@@ -87,7 +87,7 @@ interface EditorContentProps {
 }
 
 function EditorContent(props: EditorContentProps) {
-  const [ native, invalidateNative ] = useNative();
+  const [ native, ] = useNative();
   const { bpm, samples, title } = props.song;
 
   useEffect(() => {
@@ -95,17 +95,13 @@ function EditorContent(props: EditorContentProps) {
     native!.setTrackLength(samples);
   }, [bpm, native, samples]);
 
-  useEffect(() => {
-    invalidateNative();
-  }, [bpm, samples, invalidateNative]);
-
   return (
     <>
       <EditorNavbar songTitle={title} songBpm={bpm}/>
       <ContentContainer>
         <EditorTracks/>
         <PeakMeter />
-        <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/>
+        { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
       </ContentContainer>
     </>
   );

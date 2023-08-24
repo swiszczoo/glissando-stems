@@ -42,7 +42,7 @@ const theme = createTheme({
 
 function AudioContextKiller() {
   const location = useLocation();
-  const [ native, invalidateNative ] = useNative();
+  const [ native, ] = useNative();
   const pathname = location.pathname;
 
   useEffect(() => {
@@ -56,10 +56,9 @@ function AudioContextKiller() {
 
       if (native && native.getPlaybackState() !== 'stop') {
         native.stop();
-        invalidateNative();
       }
     }
-  }, [pathname, native, invalidateNative]);
+  }, [pathname, native]);
 
   return <></>;
 }

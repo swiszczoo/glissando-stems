@@ -3,6 +3,8 @@ import { styled } from '@mui/system';
 
 import { useNative } from '../hooks/useNative';
 
+import { withSeeking } from './withSeeking';
+
 const TimelineContainer = styled('div')(() => ({
   paddingLeft: 136,
   paddingRight: 11,
@@ -10,14 +12,14 @@ const TimelineContainer = styled('div')(() => ({
   scrollbarGutter: 'stable',
 }));
 
-const TimelineRoot = styled('div')(({ theme }) => ({
+const TimelineRoot = withSeeking(styled('div')(({ theme }) => ({
   boxSizing: 'border-box',
   position: 'relative',
   width: '100%',
   height: 54,
   borderBottom: `2px solid ${theme.palette.primary.main}`,
   marginBottom: theme.spacing(1),
-}));
+})));
 
 const PrimaryBar = styled('div')(({ theme }) => ({
   boxSizing: 'border-box',

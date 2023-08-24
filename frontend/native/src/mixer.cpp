@@ -5,6 +5,8 @@
 #include <peak-meter.h>
 #include <utils.h>
 
+#include <emscripten.h>
+
 #include <cassert>
 #include <iostream>
 
@@ -21,6 +23,9 @@ Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     , _metronome_gain_db(1.0)
     , _bpm(120.0)
 {
+    _manager.set_bg_task_complete_callback(
+        std::bind(&Mixer::invalidate_state, this));
+
     _thread = std::thread(&Mixer::thread_main, this);
 }
 
@@ -37,11 +42,13 @@ int Mixer::test_js_binding() const
 void Mixer::play()
 {
     _state = PlaybackState::PLAYING;
+    invalidate_state();
 }
 
 void Mixer::pause()
 {
     _state = PlaybackState::PAUSED;
+    invalidate_state();
 }
 
 void Mixer::stop()
@@ -68,6 +75,7 @@ std::string Mixer::playback_state() const
 void Mixer::reset_playback()
 {
     _playback_position = 0;
+    invalidate_state();
 }
 
 uint32_t Mixer::playback_position() const
@@ -92,12 +100,16 @@ int Mixer::sample_rate() const
 
 void Mixer::set_metronome_enabled(bool enabled)
 {
-    _metronome_enabled = enabled;
+    if (enabled != _metronome_enabled) {
+        _metronome_enabled = enabled;
+        invalidate_state();
+    }
 }
 
 void Mixer::toggle_metronome()
 {
     _metronome_enabled = !_metronome_enabled;
+    invalidate_state();
 }
 
 bool Mixer::metronome_enabled() const
@@ -107,7 +119,10 @@ bool Mixer::metronome_enabled() const
 
 void Mixer::set_metronome_gain_db(double gain)
 {
-    _metronome_gain_db = gain;
+    if (gain != _metronome_gain_db) {
+        _metronome_gain_db = gain;
+        invalidate_state();
+    }
 }
 
 double Mixer::metronome_gain_db() const
@@ -117,7 +132,10 @@ double Mixer::metronome_gain_db() const
 
 void Mixer::set_track_bpm(double bpm)
 {
-    _bpm = bpm;
+    if (bpm != _bpm) {
+        _bpm = bpm;
+        invalidate_state();
+    }
 }
 
 double Mixer::track_bpm() const
@@ -137,8 +155,11 @@ double Mixer::right_channel_out_db() const
 
 void Mixer::set_track_length(uint32_t samples)
 {
-    _length = samples;
-    _manager.set_track_length(samples);
+    if (samples != _length) {
+        _length = samples;
+        _manager.set_track_length(samples);
+        invalidate_state();
+    }
 }
 
 uint32_t Mixer::track_length() const
@@ -221,4 +242,13 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
     _metronome->render(chunk);
     _master_level->process(chunk);
     _playback_position = position;
+}
+
+void Mixer::invalidate_state()
+{
+    MAIN_THREAD_EM_ASM({
+        if (window._invalidateModuleContext) {
+            window._invalidateModuleContext();
+        }
+    });
 }

@@ -73,4 +73,5 @@ private:
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);
+    void invalidate_state();
 };
