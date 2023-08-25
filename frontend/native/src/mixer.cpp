@@ -76,19 +76,19 @@ std::string Mixer::playback_state() const
 
 void Mixer::reset_playback()
 {
-    _playback_position = 0;
+    _playback_position.store(0, std::memory_order_relaxed);
     invalidate_state();
 }
 
 uint32_t Mixer::playback_position() const
 {
-    return _playback_position;
+    return _playback_position.load(std::memory_order_relaxed);
 }
 
 bool Mixer::set_playback_position(uint32_t new_position)
 {
     if (_state != PlaybackState::STOPPED) {
-        _playback_position = new_position;
+        _playback_position.store(new_position, std::memory_order_relaxed);
         return true;
     }
 
@@ -224,6 +224,7 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
     std::lock_guard lock(_mixdown_lock);
 
     uint32_t position = _playback_position;
+    uint32_t original_position = position;
     PlaybackState state = _state;
 
     if (state == PlaybackState::PLAYING) {
@@ -255,7 +256,8 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
 
     _metronome->render(chunk);
     _master_level->process(chunk);
-    _playback_position = position;
+    _playback_position.compare_exchange_strong(
+        original_position, position, std::memory_order::relaxed);
 
     _last_state = state;
     _last_playback_position = position;

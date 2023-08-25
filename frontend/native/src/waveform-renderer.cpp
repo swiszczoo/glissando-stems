@@ -131,14 +131,14 @@ void WaveformRenderer::process_silence(pixel* image, int32_t offset,
     int current_column = 0;
 
     for (uint32_t sample = 0; sample < total_length; ++sample) {
-        int32_t stem_sample = sample + offset;
+        int32_t stem_sample = sample - offset;
         bool is_silence = false;
 
         if (stem_sample < 0 || stem_sample >= static_cast<int32_t>(num_samples)) {
             is_silence = true;
         } else {
-            int16_t left = samples[2 * sample];
-            int16_t right = samples[2 * sample + 1];
+            int16_t left = samples[2 * stem_sample];
+            int16_t right = samples[2 * stem_sample + 1];
 
             is_silence = std::abs(left) < _silence_threshold 
                        && std::abs(right) < _silence_threshold;
@@ -206,12 +206,12 @@ std::pair<int16_t, int16_t> WaveformRenderer::get_column_peaks(uint32_t start_sa
 
     int16_t hi_peak = SAMPLE_MIN, low_peak = SAMPLE_MAX;
     for (uint32_t sample = start_sample; sample < end_sample; ++sample) {
-        int32_t stem_sample = sample + offset;
+        int32_t stem_sample = sample - offset;
         if (stem_sample < 0) continue;
         if (stem_sample >= static_cast<int32_t>(num_samples)) break;
 
-        int16_t left = samples[2 * sample];
-        int16_t right = samples[2 * sample + 1];
+        int16_t left = samples[2 * stem_sample];
+        int16_t right = samples[2 * stem_sample + 1];
         
         hi_peak = std::max({ hi_peak, left, right });
         low_peak = std::min({ low_peak, left, right });

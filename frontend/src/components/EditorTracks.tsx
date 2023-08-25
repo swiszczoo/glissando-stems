@@ -19,6 +19,7 @@ const EditorTracksContainer = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   position: 'relative',
+  userSelect: 'none',
 }));
 
 const EditorTracksScrollable = styled('div')(({ theme }) => ({
