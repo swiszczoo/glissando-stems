@@ -161,7 +161,11 @@ function stemDataToStemInfo(pathPrefix: string, data: StemData): StemInfo {
   };
 }
 
-function EditorTracks() {
+interface EditorTracksProps {
+  form: FormType;
+}
+
+function EditorTracks(props: EditorTracksProps) {
   const { slug } = useParams();
   const [ native, ] = useNative();
   const data = useQueryData(['stems', slug]) as StemData[];
@@ -187,7 +191,7 @@ function EditorTracks() {
 
   return (
     <EditorTracksContainer>
-      <Timeline />
+      <Timeline form={props.form}/>
       <EditorTracksScrollable>
         {
           sortedStems.map((stem: StemData, index: number) => (

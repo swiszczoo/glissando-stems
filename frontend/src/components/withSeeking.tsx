@@ -11,6 +11,7 @@ export function withSeeking<P, T extends HTMLElement>(WrappedComponent: React.Co
     const [ native, ] = useNative();
     const seekPointerId = useRef<number | undefined>(undefined);
     const wasPlaying = useRef<boolean | undefined>(undefined);
+    const componentRef = useRef<T>(null);
 
     const getFractionPosition = useCallback((event: React.PointerEvent<T>) => {
       const bounds = event.currentTarget.getBoundingClientRect();
@@ -19,7 +20,7 @@ export function withSeeking<P, T extends HTMLElement>(WrappedComponent: React.Co
     }, []);
 
     const handleMouseDown = useCallback((event: React.PointerEvent<T>) => {
-      if (wasPlaying.current !== undefined || event.button !== 0) {
+      if (wasPlaying.current !== undefined || event.button !== 0 || event.target !== componentRef.current) {
         return;
       }
 
@@ -76,6 +77,7 @@ export function withSeeking<P, T extends HTMLElement>(WrappedComponent: React.Co
     return (
       <WrappedComponent 
         {...props} 
+        ref={componentRef}
         onPointerDown={handleMouseDown}
         onPointerMove={handleMouseMove}
         onPointerUp={handleMouseUp}

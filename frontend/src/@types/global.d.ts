@@ -46,3 +46,5 @@ interface NativeMixer {
   isStemMuted: (stemId: number) => boolean;
   isStemSoloed: (stemId: number) => boolean;
 }
+
+type FormType = { bar: number; name: string; }[];

@@ -24,7 +24,7 @@ interface SongData {
   duration: number;
   samples: number;
   stemCount: number;
-  form: { bar: number; name: string }[];
+  form: FormType;
 }
 
 
@@ -88,7 +88,7 @@ interface EditorContentProps {
 
 function EditorContent(props: EditorContentProps) {
   const [ native, ] = useNative();
-  const { bpm, samples, title } = props.song;
+  const { bpm, samples, title, form } = props.song;
 
   useEffect(() => {
     native!.setTrackBpm(bpm);
@@ -103,7 +103,7 @@ function EditorContent(props: EditorContentProps) {
     <>
       <EditorNavbar songTitle={title} songBpm={bpm}/>
       <ContentContainer>
-        <EditorTracks/>
+        <EditorTracks form={form}/>
         <PeakMeter />
         { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
       </ContentContainer>

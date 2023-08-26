@@ -81,28 +81,38 @@ const FormMarkerFlag = styled('div')(({ theme }) => ({
   maxWidth: 75,
   fontSize: 13,
   fontWeight: 900,
-  paddingTop: 0,
   paddingLeft: 2,
   paddingRight: 8,
-  lineHeight: 1.1,
+  lineHeight: 1.2,
   backgroundColor: theme.palette.primary.main,
   color: theme.palette.primary.contrastText,
   clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%)',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
+  cursor: 'pointer',
 }));
 
 interface FormMarkerProps {
-  left: string;
+  position: number;
   name: string;
 }
 
 function FormMarker(props: FormMarkerProps) {
+  const [ native, ] = useNative();
+
+  const handleClick = () => {
+    if (native!.getPlaybackState() === 'stop') {
+      native!.pause();
+    }
+
+    native!.setPlaybackPosition(props.position * native!.getTrackLength() + 1);
+  };
+
   return (
     <>
-      <FormMarkerBar style={{ left: props.left }}>
-        <FormMarkerFlag title={props.name}>{props.name}</FormMarkerFlag>
+      <FormMarkerBar style={{ left: `${props.position * 100}%` }}>
+        <FormMarkerFlag onClick={handleClick} title={props.name}>{props.name}</FormMarkerFlag>
       </FormMarkerBar>
     </>
   )
@@ -122,28 +132,43 @@ function calcBarPositionsFromBpm(bpm: number, sampleRate: number, totalSamples: 
   return bars;
 }
 
-function Timeline() {
+interface TimelineProps {
+  form: FormType;
+}
+
+function Timeline(props: TimelineProps) {
   const [ native, ] = useNative();
   const bpm = native!.getTrackBpm();
   const sampleRate = native!.getSampleRate();
   const trackLength = native!.getTrackLength();
 
-  const barLines = useMemo(() => {
-    const barPositions = calcBarPositionsFromBpm(bpm, sampleRate, trackLength);
+  const barPositions = useMemo(() => (
+    calcBarPositionsFromBpm(bpm, sampleRate, trackLength)
+  ), [bpm, trackLength, sampleRate]);
 
+  const barLines = useMemo(() => {
     return barPositions.map((position, index) => {
       const style = { left: `${position / trackLength * 100}%`};
       const primaryClassName = (index + 1 >= 100) ? 'plus100' : '';
       if (index % 4 === 0) return <PrimaryBar className={primaryClassName} key={index} style={style}>{index + 1}</PrimaryBar>
       else return <SecondaryBar key={index} style={style} />
     });
-  }, [bpm, sampleRate, trackLength]);
+  }, [barPositions, trackLength]);
 
+  const formMarkers = useMemo(() => (
+    props.form.map((marker) => {
+      if (barPositions[marker.bar - 1] === undefined) return <></>;
+
+      const position = barPositions[marker.bar - 1] / trackLength;
+      return <FormMarker position={position} name={marker.name} />;
+    })
+  ), [barPositions, props.form, trackLength]);
 
   return (
     <TimelineContainer>
       <TimelineRoot>
         { barLines }
+        { formMarkers }
       </TimelineRoot>
     </TimelineContainer>
   );
