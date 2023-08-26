@@ -33,6 +33,10 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("updateStemInfo", &Mixer::update_stem_info)
         .function("getWaveformOrdinal", &Mixer::waveform_ordinal)
         .function("getWaveformDataUri", &Mixer::waveform_data_uri)
+        .function("toggleMute", &Mixer::toggle_mute)
+        .function("toggleSolo", &Mixer::toggle_solo)
+        .function("isStemMuted", &Mixer::stem_muted)
+        .function("isStemSoloed", &Mixer::stem_soloed)
         ;
     value_object<stem_info>("StemInfo")
         .field("id", &stem_info::id)

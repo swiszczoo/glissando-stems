@@ -24,29 +24,41 @@ public:
     ~Mixer();
 
     int test_js_binding() const;
+    
     void play();
     void pause();
     void stop();
+
     std::string playback_state() const;
     void reset_playback();
     uint32_t playback_position() const;
     bool set_playback_position(uint32_t new_position);
+
     int sample_rate() const;
+
     void set_metronome_enabled(bool enabled);
     void toggle_metronome();
     bool metronome_enabled() const;
     void set_metronome_gain_db(double gain);
     double metronome_gain_db() const;
+
     void set_track_bpm(double bpm);
     double track_bpm() const;
     double left_channel_out_db() const;
     double right_channel_out_db() const;
+
     void set_track_length(uint32_t samples);
     uint32_t track_length() const;
+
     void update_stem_info(const std::vector<stem_info>& info);
 
     uint32_t waveform_ordinal(uint32_t stem_id) const;
     std::string waveform_data_uri(uint32_t stem_id) const;
+
+    void toggle_mute(uint32_t stem_id);
+    void toggle_solo(uint32_t stem_id);
+    bool stem_muted(uint32_t stem_id) const;
+    bool stem_soloed(uint32_t stem_id) const;
 
 private:
     enum class PlaybackState {
@@ -71,7 +83,7 @@ private:
 
     SpinLock _mixdown_lock;
 
-    StemManager _manager;
+    StemManager _stems;
 
     void thread_main();
     void perform_mixdown(audio_chunk& chunk);

@@ -2,8 +2,11 @@
 #include <atomic>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+
 #include <vector>
 
 
@@ -32,6 +35,12 @@ public:
 
     void set_track_length(uint32_t samples);
     uint32_t track_length() const;
+
+    void toggle_mute(uint32_t stem_id);
+    void toggle_solo(uint32_t stem_id);
+    bool stem_muted(uint32_t stem_id) const;
+    bool stem_soloed(uint32_t stem_id) const;
+    bool stem_audible(uint32_t stem_id) const;
 
     uint32_t waveform_ordinal(uint32_t stem_id) const;
     std::string waveform_data_uri(uint32_t stem_id) const;
@@ -73,6 +82,11 @@ private:
     std::atomic<uint32_t> _length;
     std::unordered_map<uint32_t, StemEntryPtr> _stems;
     std::function<void()> _complete_cb;
+
+    std::unordered_set<uint32_t> _muted_stems;
+    std::optional<uint32_t> _soloed_stem;
+
+    void switch_to_mute_mode();
 
     void erase_unused_stems(const std::vector<stem_info>& info);
     void update_or_add_stems(const std::vector<stem_info>& info);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
 import { styled } from '@mui/system';
 
@@ -8,6 +8,8 @@ import PlaybackIndicator from './PlaybackIndicator';
 import Timeline from './Timeline';
 
 import { withSeeking } from './withSeeking';
+
+import { InstrumentMap, UnknownInstrument } from '../data/instruments';
 
 import { useNative } from '../hooks/useNative';
 import { useQueryData } from '../hooks/useQueryData';
@@ -110,13 +112,26 @@ function EditorTrack(props: EditorTrackProps) {
     else return <WaveformLoader><div>Przetwarzanie...</div></WaveformLoader>;
   }, [waveformDataUri]);
 
+  const handleMute = useCallback(() => {
+    native!.toggleMute(props.stemId);
+  }, [native, props.stemId]);
+
+  const handleSolo = useCallback(() => {
+    native!.toggleSolo(props.stemId);
+  }, [native, props.stemId]);
+
   return (
     <TrackContainer>
       <TrackTile instrument={props.instrument} icon title={props.name}>
         <TrackLabel>{props.name}</TrackLabel>
       </TrackTile>
       <span style={{ width: 8 }} />
-      <MuteSolo/>
+      <MuteSolo 
+        mute={native!.isStemMuted(props.stemId)} 
+        solo={native!.isStemSoloed(props.stemId)}
+        onMute={handleMute}
+        onSolo={handleSolo}
+        />
       <span style={{ width: 8 }}/>
       <WaveformTile instrument={props.instrument}>
         { waveformView }
@@ -152,7 +167,14 @@ function EditorTracks() {
   const data = useQueryData(['stems', slug]) as StemData[];
   const { stemLocationPrefix } = useSession();
 
-  const sortedStems = useMemo(() => data, [data]);
+  const sortedStems = useMemo(() => {
+    const sortFunc = (a: StemData, b: StemData) => {
+      const keyA = (InstrumentMap[a.instrument] || UnknownInstrument).orderingKey;
+      const keyB = (InstrumentMap[b.instrument] || UnknownInstrument).orderingKey;
+      return keyA - keyB;
+    }
+    return data.sort(sortFunc);
+  }, [data]);
 
   useEffect(() => {
     const vector = new window.Module.VectorStemInfo();

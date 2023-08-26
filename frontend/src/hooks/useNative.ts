@@ -9,7 +9,8 @@ export function useNative(): [NativeMixer | undefined, () => void] {
   const ctx = useContext(WasmContext);
   ctx.ensureModuleIsLoaded();
 
-  const mixer = useMemo(() => (ctx.module as GlissandoModule)?.getGlobalMixer(), [ctx]);
+  const module = ctx.module as GlissandoModule;
+  const mixer = useMemo(() => module?.getGlobalMixer(), [module]);
   
-  return [mixer, ctx.invalidateState];
+  return useMemo(() => [mixer, ctx.invalidateState], [mixer, ctx]);
 }

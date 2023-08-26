@@ -41,4 +41,8 @@ interface NativeMixer {
   updateStemInfo: (info: StemInfo[]) => void;
   getWaveformOrdinal: (stemId: number) => number;
   getWaveformDataUri: (stemId: number) => string;
+  toggleMute: (stemId: number) => void;
+  toggleSolo: (stemId: number) => void;
+  isStemMuted: (stemId: number) => boolean;
+  isStemSoloed: (stemId: number) => boolean;
 }

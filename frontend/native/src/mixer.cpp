@@ -25,7 +25,7 @@ Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     , _metronome_gain_db(1.0)
     , _bpm(120.0)
 {
-    _manager.set_bg_task_complete_callback(
+    _stems.set_bg_task_complete_callback(
         std::bind(&Mixer::invalidate_state, this));
 
     _thread = std::thread(&Mixer::thread_main, this);
@@ -159,7 +159,7 @@ void Mixer::set_track_length(uint32_t samples)
 {
     if (samples != _length) {
         _length = samples;
-        _manager.set_track_length(samples);
+        _stems.set_track_length(samples);
         invalidate_state();
     }
 }
@@ -171,17 +171,39 @@ uint32_t Mixer::track_length() const
 
 void Mixer::update_stem_info(const std::vector<stem_info>& info)
 {
-    _manager.update_stem_info(info);
+    _stems.update_stem_info(info);
 }
 
 uint32_t Mixer::waveform_ordinal(uint32_t stem_id) const
 {
-    return _manager.waveform_ordinal(stem_id);
+    return _stems.waveform_ordinal(stem_id);
 }
 
 std::string Mixer::waveform_data_uri(uint32_t stem_id) const
 {
-    return _manager.waveform_data_uri(stem_id);
+    return _stems.waveform_data_uri(stem_id);
+}
+
+void Mixer::toggle_mute(uint32_t stem_id)
+{
+    _stems.toggle_mute(stem_id);
+    invalidate_state();
+}
+
+void Mixer::toggle_solo(uint32_t stem_id)
+{
+    _stems.toggle_solo(stem_id);
+    invalidate_state();
+}
+
+bool Mixer::stem_muted(uint32_t stem_id) const
+{
+    return _stems.stem_muted(stem_id);
+}
+
+bool Mixer::stem_soloed(uint32_t stem_id) const
+{
+    return _stems.stem_soloed(stem_id);
 }
 
 void Mixer::thread_main()
@@ -202,7 +224,7 @@ void Mixer::thread_main()
 
         (*_buffer) << chunk;
 
-        if (_playback_position >= _length) {
+        if (_playback_position > _length) {
             stop();
         }
 
@@ -228,7 +250,7 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
     PlaybackState state = _state;
 
     if (state == PlaybackState::PLAYING) {
-        _manager.render(position, chunk);
+        _stems.render(position, chunk);
         
         if (_metronome_enabled) {
             _metronome->set_bpm(_bpm);
@@ -249,13 +271,13 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
     } else if (state == PlaybackState::PAUSED && _last_state == PlaybackState::PLAYING) {
         // render last frame to make a fade-out frame 
         // (state != PLAYING so it wasn't rendered yet)
-        _manager.render(_last_playback_position, chunk); 
+        _stems.render(_last_playback_position, chunk); 
 
         apply_soft_stop(chunk);
     }
 
-    _metronome->render(chunk);
     _master_level->process(chunk);
+    _metronome->render(chunk);
     _playback_position.compare_exchange_strong(
         original_position, position, std::memory_order::relaxed);
 

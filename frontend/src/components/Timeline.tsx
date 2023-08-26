@@ -28,6 +28,7 @@ const PrimaryBar = styled('div')(({ theme }) => ({
   height: 18,
   borderLeft: `3px solid ${theme.palette.primary.main}`,
   paddingLeft: 2,
+  paddingRight: 2,
   fontSize: 12,
   fontWeight: 900,
   lineHeight: 1.1,
@@ -36,6 +37,19 @@ const PrimaryBar = styled('div')(({ theme }) => ({
   userSelect: 'none',
   zIndex: 1,
   transform: 'translateX(-1.5px)',
+  '&.plus100': {
+    letterSpacing: -1,
+  },
+  '&:before': {
+    content: '""',
+    background: theme.palette.background.main,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '100%',
+    height: '70%',
+    zIndex: -1,
+  },
 }));
 
 const SecondaryBar = styled('div')(({ theme }) => ({
@@ -119,7 +133,8 @@ function Timeline() {
 
     return barPositions.map((position, index) => {
       const style = { left: `${position / trackLength * 100}%`};
-      if (index % 4 === 0) return <PrimaryBar key={index} style={style}>{index + 1}</PrimaryBar>
+      const primaryClassName = (index + 1 >= 100) ? 'plus100' : '';
+      if (index % 4 === 0) return <PrimaryBar className={primaryClassName} key={index} style={style}>{index + 1}</PrimaryBar>
       else return <SecondaryBar key={index} style={style} />
     });
   }, [bpm, sampleRate, trackLength]);

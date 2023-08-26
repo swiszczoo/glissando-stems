@@ -48,8 +48,7 @@ function PlaybackIndicator() {
     if (mixer.getPlaybackState() === 'stop') {
       setPosition(undefined);
     } else {
-      const duration = 449792;
-      setPosition(mixer.getPlaybackPosition() / duration);
+      setPosition(mixer.getPlaybackPosition() / mixer.getTrackLength());
     }
   }, []));
 

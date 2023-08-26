@@ -95,6 +95,10 @@ function EditorContent(props: EditorContentProps) {
     native!.setTrackLength(samples);
   }, [bpm, native, samples]);
 
+  useEffect(() => {
+    document.title = title + ' \u2013 Glissando Stems';
+  }, [title]);
+
   return (
     <>
       <EditorNavbar songTitle={title} songBpm={bpm}/>
@@ -130,7 +134,7 @@ function EditorRoute() {
   return (
     <SolidBackgroundFrame>
       { loading && <LoaderContent /> }
-      { !loading && <EditorContent song={songQuery.data}/> }
+      { !loading && <EditorContent key={slug} song={songQuery.data}/> }
     </SolidBackgroundFrame>
   );
 }

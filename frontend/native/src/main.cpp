@@ -13,6 +13,7 @@ std::unique_ptr<AudioWorklet> g_worklet;
 std::unique_ptr<Mixer> g_mixer;
 
 int main() {
+    std::cout.sync_with_stdio();
     std::cout << "WASM module is initializing..." << std::endl;
 
     // Create audio buffer

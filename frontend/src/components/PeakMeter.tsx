@@ -23,7 +23,6 @@ const PeakMeterLimiter = styled('div')(() => ({
   width: '100%',
   textAlign: 'center',
   color: '#d13b32',
-  opacity: 0.2,
 }));
 
 const PeakMeterBarContainer = styled('div')(() => ({
@@ -95,36 +94,46 @@ function PeakMeterBar(props: PeakMeterBarProps) {
   );
 }
 
-function PeakMeterController() {
-  const [ db, setDb ] = useState([-100, -100]);
+interface PeakMeterBarsProps {
+  leftDb: number;
+  rightDb: number;
+}
 
-  usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
-    if (mixer.getPlaybackState() === 'stop') {
-      setDb([-100, -100]);
-    } else {
-      setDb([mixer.getLeftChannelOutDb(), mixer.getRightChannelOutDb()]);
-    }
-  }, []));
-
+function PeakMeterBars(props: PeakMeterBarsProps) {
   return (
     <PeakMeterBarContainer>
-      <PeakMeterBar valueDb={db[0]}/>
-      <PeakMeterBar valueDb={db[1]}/>
+      <PeakMeterBar valueDb={props.leftDb}/>
+      <PeakMeterBar valueDb={props.rightDb}/>
     </PeakMeterBarContainer>
   );
 }
 
 function PeakMeter() {
+  const [ limiterReduction, setLimiterReduction ] = useState(0);
+  const [ db, setDb ] = useState([-100, -100]);
+
+  usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
+    if (mixer.getPlaybackState() === 'stop') {
+      setLimiterReduction(0);
+      setDb([-100, -100]);
+    } else {
+      setLimiterReduction(window.audioLimiter?.reduction || 0);
+      setDb([mixer.getLeftChannelOutDb(), mixer.getRightChannelOutDb()]);
+    }
+  }, []));
+
+  const limiterOpacity = Math.min(1, 0.2 - Math.min(0, (limiterReduction + 1) / 2));
+
   return (
     <PeakMeterContainer>
-      <PeakMeterLimiter>LIMITER</PeakMeterLimiter>
+      <PeakMeterLimiter style={{ opacity: limiterOpacity }}>&#x25cf; LIMITER</PeakMeterLimiter>
       <div>
         <PeakMeterLegend>L</PeakMeterLegend>
         <PeakMeterLegend>R</PeakMeterLegend>
         <PeakMeterLegend>dB(TP)</PeakMeterLegend>
       </div>
       <div style={{ position: 'relative', flexGrow: 1 }}>
-        <PeakMeterController />
+        <PeakMeterBars leftDb={db[0]} rightDb={db[1]}/>
         <PeakMeterScaleContainer>
           { scaleValues.map((value) => <PeakMeterScale key={value}>{value}</PeakMeterScale>)}
         </PeakMeterScaleContainer>

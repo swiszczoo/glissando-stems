@@ -3,9 +3,10 @@ import { useEffect } from 'react';
 import { useNative } from './useNative';
 
 export function usePlaybackUpdate(fun: (mixer: NativeMixer) => void) {
-  const [ native, ] = useNative();
+  const nativeData = useNative();
 
   useEffect(() => {
+    const [ native, ] = nativeData;
     if (!native)
       return;
 
@@ -29,6 +30,6 @@ export function usePlaybackUpdate(fun: (mixer: NativeMixer) => void) {
     return () => {
       effectKilled = true;
     };
-  }, [native, fun]);
+  }, [nativeData, fun]);
 }
 

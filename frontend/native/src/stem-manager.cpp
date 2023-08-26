@@ -9,12 +9,13 @@
 #include <emscripten/fetch.h>
 
 #include <cassert>
-#include <iostream>
+#include <cstdio>
 #include <thread>
 #include <unordered_set>
 
 
 const float StemManager::SHORT_TO_FLOAT = 1 / 32768.f;
+using std::nullopt;
 
 StemManager::StemManager()
     : _length(0)
@@ -25,8 +26,7 @@ void StemManager::set_track_length(uint32_t samples)
 {
     _length = samples;
 
-    for (const auto& stem : _stems) {
-        auto stem_ptr = stem.second;
+    for (const auto& [ stem_id, stem_ptr ] : _stems) {
         if (stem_ptr->data_ready) {
             // If the stem is ready, invalidate its waveform image
             // and run a new task to regenerate it
@@ -46,6 +46,53 @@ void StemManager::set_track_length(uint32_t samples)
 uint32_t StemManager::track_length() const
 {
     return _length;
+}
+
+void StemManager::toggle_mute(uint32_t stem_id)
+{
+    if (_soloed_stem != nullopt) {
+        switch_to_mute_mode();
+    }
+
+    std::lock_guard lock(_mutex);
+    bool found = _muted_stems.contains(stem_id);
+    if (found) {
+        _muted_stems.erase(stem_id);
+    } else {
+        _muted_stems.insert(stem_id);
+    }
+}
+
+void StemManager::toggle_solo(uint32_t stem_id)
+{
+    std::lock_guard lock(_mutex);
+    bool found = _soloed_stem == stem_id;
+
+    if (found) {
+        _soloed_stem = nullopt;
+        _muted_stems.erase(stem_id);
+    } else {
+        _soloed_stem = stem_id;
+    }
+}
+
+bool StemManager::stem_muted(uint32_t stem_id) const
+{
+    if (_soloed_stem.has_value()) {
+        return _soloed_stem.value() != stem_id;
+    }
+
+    return _muted_stems.contains(stem_id);
+}
+
+bool StemManager::stem_soloed(uint32_t stem_id) const
+{
+    return _soloed_stem == stem_id;
+}
+
+bool StemManager::stem_audible(uint32_t stem_id) const
+{
+    return !stem_muted(stem_id);
 }
 
 uint32_t StemManager::waveform_ordinal(uint32_t stem_id) const
@@ -74,9 +121,12 @@ void StemManager::set_bg_task_complete_callback(std::function<void()> callback)
 void StemManager::render(uint32_t first_sample, audio_chunk& chunk)
 {
     std::lock_guard main_lock(_mutex); // <-- this will be called from a worker thread
-    for (const auto& stem : _stems) {
-        auto stem_ptr = stem.second;
+    for (const auto& [ stem_id, stem_ptr ] : _stems) {
         if (!stem_ptr->data_ready || stem_ptr->deleted) {
+            continue;
+        }
+
+        if (!stem_audible(stem_id)) {
             continue;
         }
 
@@ -88,6 +138,7 @@ void StemManager::render(uint32_t first_sample, audio_chunk& chunk)
         if (pan < -1.f) pan = -1.f;
         if (pan > 1.f) pan = 1.f;
 
+        // Linear pan law
         float gain_l = 1 - pan;
         float gain_r = 1 + pan;
 
@@ -110,11 +161,25 @@ void StemManager::update_stem_info(const std::vector<stem_info>& info)
     update_or_add_stems(info);
 }
 
+void StemManager::switch_to_mute_mode()
+{
+    std::unordered_set<uint32_t> new_muted_stems;
+    for (const auto& [ stem_id, stem_ptr ] : _stems) {
+        if (stem_muted(stem_id)) {
+            new_muted_stems.insert(stem_id);
+        }
+    }
+
+    std::lock_guard lock(_mutex);
+    _muted_stems = std::move(new_muted_stems);
+    _soloed_stem = nullopt;
+}
+
 void StemManager::erase_unused_stems(const std::vector<stem_info>& info)
 {
     std::unordered_set<uint32_t> ids_to_remove;
-    for (const auto& stem : _stems) {
-        ids_to_remove.insert(stem.first);
+    for (const auto& [ stem_id, stem_ptr ] : _stems) {
+        ids_to_remove.insert(stem_id);
     }
 
     for (const auto& stem : info) {
@@ -125,6 +190,11 @@ void StemManager::erase_unused_stems(const std::vector<stem_info>& info)
     for (uint32_t id : ids_to_remove) {
         _stems[id]->deleted = true;
         _stems.erase(id);
+
+        _muted_stems.erase(id);
+        if (_soloed_stem == id) {
+            _soloed_stem = nullopt;
+        }
     }
 }
 
@@ -217,8 +287,9 @@ void StemManager::run_waveform_processing(StemEntryPtr stem, uint32_t prev_ordin
 
 void StemManager::process_stem(StemEntryPtr stem)
 {
-    std::cout << "Thread " << std::this_thread::get_id() 
-              << ": Downloading \"" << stem->info.path << '\"' << std::endl;
+    pthread_t tid = pthread_self();
+
+    printf("Thread %lu: Downloading \"%s\"\n", tid, stem->info.path.c_str());
 
     emscripten_fetch_attr_t attr;
     emscripten_fetch_attr_init(&attr);
@@ -227,8 +298,7 @@ void StemManager::process_stem(StemEntryPtr stem)
     emscripten_fetch_t* fetch = emscripten_fetch(&attr, stem->info.path.c_str());
 
     if (fetch->status < 200 || fetch->status > 299) {
-        std::cerr << "Thread " << std::this_thread::get_id() 
-                  << ": Download failed!" << std::endl;
+        fprintf(stderr, "Thread %lu: Download failed!\n", tid);
 
         stem->error = true;
         return;
@@ -239,9 +309,8 @@ void StemManager::process_stem(StemEntryPtr stem)
         return;
     }
 
-    std::cout << "Thread " << std::this_thread::get_id()
-              << ": Download finished. Got " << fetch->numBytes << " bytes. " 
-              << "Starting vorbis decoder..." << std::endl;
+    printf("Thread %lu: Download finished. Got %llu bytes. Starting vorbis decoder...\n", 
+        tid, fetch->numBytes);
 
     bool vorbis_ok = decode_vorbis_stream(stem, fetch->data, fetch->numBytes);
     emscripten_fetch_close(fetch);
@@ -249,15 +318,14 @@ void StemManager::process_stem(StemEntryPtr stem)
     if (stem->deleted) return;
 
     if (vorbis_ok) {
-        std::cout << "Thread " << std::this_thread::get_id()
-                  << ": Vorbis data has been decoded." << std::endl;
+        printf("Thread %lu: Vorbis data has been decoded.\n", tid);
+
         stem->data_ready = true;
         process_stem_waveform(stem, 0);
-        std::cout << "Thread " << std::this_thread::get_id()
-                  << ": Initial waveform image has been generated." << std::endl;
+
+        printf("Thread %lu: Initial waveform image has been generated.\n", tid);
     } else {
-        std::cerr << "Thread " << std::this_thread::get_id() 
-                  << ": Vorbis decoding failed!" << std::endl;
+        fprintf(stderr, "Thread %lu: Vorbis decoding failed!\n", tid);
         stem->error = true;
     }
 }
