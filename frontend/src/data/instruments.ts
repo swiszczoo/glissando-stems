@@ -1,4 +1,5 @@
 import PercMainIcon from '../assets/instrument-icons/perc-main.svg';
+import PercSynthIcon from '../assets/instrument-icons/perc-synth.svg';
 import PercBdIcon from '../assets/instrument-icons/perc-bd.svg';
 import PercSnareIcon from '../assets/instrument-icons/perc-snare.svg';
 import PercHatsIcon from '../assets/instrument-icons/perc-hats.svg';
@@ -43,6 +44,12 @@ export const InstrumentMap: Record<string, InstrumentType> = {
     category: InstrumentCategory.PERCUSSION,
     iconSrc: PercMainIcon,
     orderingKey: 0
+  },
+  'perc-synth': {
+    displayName: 'Automat perkusyjny',
+    category: InstrumentCategory.PERCUSSION,
+    iconSrc: PercSynthIcon,
+    orderingKey: 0.01,
   },
   'perc-bd': {
     displayName: 'Perkusja (stopa)',
@@ -151,7 +158,13 @@ export const InstrumentMap: Record<string, InstrumentType> = {
     category: InstrumentCategory.VOCAL,
     iconSrc: VocalBackingIcon,
     orderingKey: 7.5,
-  }
+  },
+  'other': {
+    displayName: 'Inne',
+    category: InstrumentCategory.UNKNOWN,
+    iconSrc: '',
+    orderingKey: Infinity,
+  },
 };
 
 export const UnknownInstrument: InstrumentType = {

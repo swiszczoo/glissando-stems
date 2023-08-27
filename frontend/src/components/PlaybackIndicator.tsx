@@ -27,7 +27,7 @@ const PlaybackBar = styled('div')(({ theme }) => ({
   height: '100%',
   background: playbackIndicatorColor || theme.palette.primary.main,
   transform: 'translateX(-50%)',
-  boxShadow: '0 0 5px black',
+  boxShadow: '0 0 6px black',
   zIndex: 100,
 }));
 

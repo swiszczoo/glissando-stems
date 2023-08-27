@@ -6,6 +6,7 @@ import InstrumentTile from './InstrumentTile';
 import MuteSolo from './MuteSolo';
 import PlaybackIndicator from './PlaybackIndicator';
 import Timeline from './Timeline';
+import UploadZone from './UploadZone';
 
 import { withSeeking } from './withSeeking';
 
@@ -203,6 +204,7 @@ function EditorTracks(props: EditorTracksProps) {
               name={stem.name}/>
           ))
         }
+        <UploadZone />
       </EditorTracksScrollable>
       <PlaybackIndicator />
     </EditorTracksContainer>
