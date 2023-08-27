@@ -67,10 +67,11 @@ void StemManager::toggle_solo(uint32_t stem_id)
 {
     std::lock_guard lock(_mutex);
     bool found = _soloed_stem == stem_id;
+    
+    _muted_stems.erase(stem_id);
 
     if (found) {
         _soloed_stem = nullopt;
-        _muted_stems.erase(stem_id);
     } else {
         _soloed_stem = stem_id;
     }

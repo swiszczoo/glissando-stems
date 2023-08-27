@@ -40,11 +40,22 @@ const ModalFrame = styled('div')(({ theme }) => ({
   width: 640,
   maxWidth: '100%',
   borderRadius: theme.spacing(2),
-  boxShadow: '0px 5px 20px rgba(0, 0, 0, 0.2)'
+  boxShadow: '0px 5px 20px rgba(0, 0, 0, 0.2)',
+  '&:focus-visible': {
+    outline: 'none',
+  }
+}));
+
+const ModalFrameSection = styled('section')(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'stretch',
+  maxHeight: '95vh',
 }));
 
 const ModalSection = styled('div')(({ theme }) => ({
   padding: `${theme.spacing(2)} ${theme.spacing(4)}`,
+  flex: 0,
   '&:not(:first-of-type)': {
     borderTop: `1px solid ${theme.palette.background.light}`
   },
@@ -71,11 +82,11 @@ function GlissandoModal(props: React.PropsWithChildren<GlissandoModalProps>) {
     <StyledModal aria-labelledby='modal-title' open={!!props.open} slots={{ backdrop: StyledBackdrop }}>
         <ModalFrame>
           <ClickAwayListener onClickAway={handleBlur}>
-            <section>
+            <ModalFrameSection>
               <ModalSection>
                 <span id='modal-title' style={{ fontSize: 24, fontWeight: 700 }}>{props.title}</span>
               </ModalSection>
-              <ModalSection>
+              <ModalSection style={{ overflowY: 'auto', flexShrink: 1, }}>
                 {props.children}
               </ModalSection>
               {
@@ -84,7 +95,7 @@ function GlissandoModal(props: React.PropsWithChildren<GlissandoModalProps>) {
                   <props.buttons/>
                 </ModalSection>
               }
-            </section>
+            </ModalFrameSection>
           </ClickAwayListener>
         </ModalFrame>
     </StyledModal>

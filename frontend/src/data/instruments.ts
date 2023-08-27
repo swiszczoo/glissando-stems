@@ -16,6 +16,8 @@ import GuitarLeadIcon from '../assets/instrument-icons/guitar-lead.svg';
 import KeysMainIcon from '../assets/instrument-icons/keys-main.svg';
 import KeysLeadIcon from '../assets/instrument-icons/keys-lead.svg';
 import KeysPadIcon from '../assets/instrument-icons/keys-pad.svg';
+import KeysOrganIcon from '../assets/instrument-icons/keys-organ.svg';
+import KeysDrawbarIcon from '../assets/instrument-icons/keys-drawbar.svg';
 import VocalMainIcon from '../assets/instrument-icons/vocal-main.svg';
 import VocalBackingIcon from '../assets/instrument-icons/vocal-backing.svg';
 
@@ -40,7 +42,7 @@ export interface InstrumentType {
 
 export const InstrumentMap: Record<string, InstrumentType> = {
   'perc-main': { 
-    displayName: 'Perkusja (bateria/mix)', 
+    displayName: 'Perkusja (zestaw/mix)', 
     category: InstrumentCategory.PERCUSSION,
     iconSrc: PercMainIcon,
     orderingKey: 0
@@ -146,6 +148,18 @@ export const InstrumentMap: Record<string, InstrumentType> = {
     category: InstrumentCategory.KEYS,
     iconSrc: KeysPadIcon,
     orderingKey: 3.2,
+  },
+  'keys-organ': {
+    displayName: 'Organy',
+    category: InstrumentCategory.KEYS,
+    iconSrc: KeysOrganIcon,
+    orderingKey: 3.3,
+  },
+  'keys-drawbar': {
+    displayName: 'Organy (typ drawbar)',
+    category: InstrumentCategory.KEYS,
+    iconSrc: KeysDrawbarIcon,
+    orderingKey: 3.31,
   },
   'vocal-main': {
     displayName: 'Wokal (główny)',

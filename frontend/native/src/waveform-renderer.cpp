@@ -19,7 +19,7 @@ WaveformRenderer::WaveformRenderer(int width, int height)
     , _color_blue(255)
     , _color_alpha(255)
     , _silence_alpha(128)
-    , _silence_threshold(1024)
+    , _silence_threshold(1536)
     , _silence_min_length(100000)
 {
 }

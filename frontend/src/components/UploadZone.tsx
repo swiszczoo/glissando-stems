@@ -4,13 +4,16 @@ import { styled } from '@mui/system';
 
 import Input from './Input';
 import Modal from './Modal';
-import { GreenButton, RedButton } from './NavbarButton';
+import { GreenButton, NormalButton, RedButton } from './NavbarButton';
 import { GlissandoOption, GlissandoSelect } from './Select';
 import Slider from './Slider';
 
 import { InstrumentMap } from '../data/instruments';
 
+import { useNative } from '../hooks/useNative';
+
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 
 const uploadAccept = {
@@ -47,7 +50,7 @@ const SliderBox = styled('div')(() => ({
   alignItems: 'center',
   '& > div': {
     whiteSpace: 'nowrap',
-    minWidth: 70,
+    minWidth: 100,
     textAlign: 'right',
     fontSize: 20,
     fontWeight: 700,
@@ -58,9 +61,13 @@ interface UploadModalProps {
   file?: File;
 }
 
+const numberRegex = /^-?[0-9]{0,6}$/;
+
 function UploadModal(props: UploadModalProps) {
+  const [ native, ] = useNative()
   const [ name, setName ] = useState('');
   const [ instrument, setInstrument ] = useState('other');
+  const [ offset, setOffset ] = useState<number | string>(0);
   const [ gain, setGain ] = useState(0);
   const [ pan, setPan ] = useState(0);
 
@@ -72,6 +79,22 @@ function UploadModal(props: UploadModalProps) {
     setInstrument(newValue as string);
   };
 
+  const handleOffsetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.currentTarget.value.length === 0) {
+      setOffset('');
+      return;
+    }
+
+    if (event.currentTarget.value === '-') {
+      setOffset('-');
+      return;
+    }
+
+    if (numberRegex.test(event.currentTarget.value)) {
+      setOffset(parseInt(event.currentTarget.value));
+    }
+  };
+
   const handleGainChange = (_: unknown, value: number | number[]) => {
     setGain(value as number);
   };
@@ -79,6 +102,8 @@ function UploadModal(props: UploadModalProps) {
   const handlePanChange = (_: unknown, value: number | number[]) => {
     setPan(value as number);
   };
+
+  const offsetInMillis = typeof offset === 'number' ? (offset / native!.getSampleRate() * 1000) : 0;
 
   const instrumentList = useMemo(() => {
     const instruments: React.JSX.Element[] = [];
@@ -108,6 +133,11 @@ function UploadModal(props: UploadModalProps) {
       <GlissandoSelect value={instrument} onChange={handleInstrumentChange}>
         { instrumentList }
       </GlissandoSelect>
+      Opóźnienie (próbki):
+      <SliderBox>
+        <Input style={{ width: '100%' }} placeholder='Wprowadź opóźnienie w liczbie próbek' value={offset} onChange={handleOffsetChange}/>
+        <div>= {offsetInMillis.toFixed(1)} ms</div>
+      </SliderBox>
       Wzmocnienie:
       <SliderBox>
         <Slider min={-24} max={12} value={gain} onChange={handleGainChange}/>
@@ -125,7 +155,13 @@ function UploadModal(props: UploadModalProps) {
       <br />
       {
         props.file &&
-        <p>Wysyłany plik:&nbsp;&nbsp;&nbsp;<strong>{props.file.name} ({(props.file.size / 1e6).toFixed(2)} MB)</strong></p>
+        <>
+          Wysyłany plik:&nbsp;&nbsp;&nbsp;
+          <NormalButton disabled style={{ cursor: 'default' }}>
+            <InsertDriveFileOutlinedIcon />&nbsp;
+            {props.file.name} ({(props.file.size / 1e6).toFixed(2)} MB)
+          </NormalButton>
+        </>
       }
     </Modal>
   );
