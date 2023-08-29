@@ -57,6 +57,12 @@ function AudioContextKiller() {
       if (native && native.getPlaybackState() !== 'stop') {
         native.stop();
       }
+
+      if (native && native.getStemCount() > 0) {
+        const emptyVector = new window.Module.VectorStemInfo();
+        native.updateStemInfo(emptyVector);
+        emptyVector.delete();
+      }
     }
   }, [pathname, native]);
 

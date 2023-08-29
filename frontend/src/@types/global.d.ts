@@ -38,6 +38,7 @@ interface NativeMixer {
   getRightChannelOutDb: () => number;
   setTrackLength: (samples: number) => void;
   getTrackLength: () => number;
+  getStemCount: () => number;
   updateStemInfo: (info: StemInfo[]) => void;
   getWaveformOrdinal: (stemId: number) => number;
   getWaveformDataUri: (stemId: number) => string;

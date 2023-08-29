@@ -30,6 +30,7 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("getRightChannelOutDb", &Mixer::right_channel_out_db)
         .function("setTrackLength", &Mixer::set_track_length)
         .function("getTrackLength", &Mixer::track_length)
+        .function("getStemCount", &Mixer::count_stems)
         .function("updateStemInfo", &Mixer::update_stem_info)
         .function("getWaveformOrdinal", &Mixer::waveform_ordinal)
         .function("getWaveformDataUri", &Mixer::waveform_data_uri)

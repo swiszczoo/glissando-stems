@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,10 +8,16 @@ import {
   ParseIntPipe,
   Post,
   Session,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+
+import { validateOrReject } from 'class-validator';
 
 import { SessionData } from '../session';
 
+import { StemService } from './stem.service';
 import { SongExceptions } from './song.exceptions';
 import { SongService } from './song.service';
 
@@ -19,14 +26,24 @@ import { Roles } from '../common/roles.decorator';
 
 import { SongCreateDto } from './dto/song-create.dto';
 import { SongResponseDto } from './dto/song-response.dto';
-import { StemResponseDto } from './dto/stem-response.dto';
+import { StemFailedResponseDto } from './dto/stem-failed-response.dto';
+import { StemProcessingResponseDto } from './dto/stem-processing-response.dto';
+import { StemReadyResponseDto } from './dto/stem-ready-response.dto';
+import { StemRequestDto } from './dto/stem-request.dto';
+
 import { StemStatus } from './entities/stem.entity';
+
+type SingleStemDto =
+  | StemFailedResponseDto
+  | StemProcessingResponseDto
+  | StemReadyResponseDto;
 
 @Controller('songs')
 export class SongController {
   constructor(
     private exceptions: SongExceptions,
     private service: SongService,
+    private stemService: StemService,
   ) {}
 
   @Get()
@@ -126,14 +143,14 @@ export class SongController {
   async findAllStems(
     @Session() session: SessionData,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<StemResponseDto[]> {
+  ): Promise<StemReadyResponseDto[]> {
     const song = await this.service.getSongByBand(session.bandId, id);
     if (!song) {
       throw this.exceptions.NOT_FOUND;
     }
 
     const stems = await this.service.getReadyStemsBySong(song);
-    return stems.map(StemResponseDto.entityToDto);
+    return stems.map(StemReadyResponseDto.entityToDto);
   }
 
   @Get(':id/stems/:stemId')
@@ -142,7 +159,7 @@ export class SongController {
     @Session() session: SessionData,
     @Param('id', ParseIntPipe) id: number,
     @Param('stemId', ParseIntPipe) stemId: number,
-  ): Promise<StemResponseDto> {
+  ): Promise<SingleStemDto> {
     const song = await this.service.getSongByBand(session.bandId, id);
     if (!song) {
       throw this.exceptions.NOT_FOUND;
@@ -154,10 +171,12 @@ export class SongController {
     }
 
     switch (stem.status) {
+      case StemStatus.FAILED:
+        return StemFailedResponseDto.entityToDto(stem);
       case StemStatus.PROCESSING:
-        return StemResponseDto.entityToDto(stem); // TODO: use a different dto
+        return StemProcessingResponseDto.entityToDto(stem);
       case StemStatus.READY:
-        return StemResponseDto.entityToDto(stem);
+        return StemReadyResponseDto.entityToDto(stem);
       default:
         throw this.exceptions.NOT_AVAILABLE;
     }
@@ -168,14 +187,14 @@ export class SongController {
   async findAllStemsBySlug(
     @Session() session: SessionData,
     @Param('slug') slug: string,
-  ): Promise<StemResponseDto[]> {
+  ): Promise<StemReadyResponseDto[]> {
     const song = await this.service.getSongByBandBySlug(session.bandId, slug);
     if (!song) {
       throw this.exceptions.NOT_FOUND;
     }
 
     const stems = await this.service.getReadyStemsBySong(song);
-    return stems.map(StemResponseDto.entityToDto);
+    return stems.map(StemReadyResponseDto.entityToDto);
   }
 
   @Get('by-slug/:slug/stems/:stemId')
@@ -184,7 +203,7 @@ export class SongController {
     @Session() session: SessionData,
     @Param('slug') slug: string,
     @Param('stemId', ParseIntPipe) stemId: number,
-  ): Promise<StemResponseDto> {
+  ): Promise<SingleStemDto> {
     const song = await this.service.getSongByBandBySlug(session.bandId, slug);
     if (!song) {
       throw this.exceptions.NOT_FOUND;
@@ -196,12 +215,71 @@ export class SongController {
     }
 
     switch (stem.status) {
+      case StemStatus.FAILED:
+        return StemFailedResponseDto.entityToDto(stem);
       case StemStatus.PROCESSING:
-        return StemResponseDto.entityToDto(stem); // TODO: use a different dto
+        return StemProcessingResponseDto.entityToDto(stem);
       case StemStatus.READY:
-        return StemResponseDto.entityToDto(stem);
+        return StemReadyResponseDto.entityToDto(stem);
       default:
         throw this.exceptions.NOT_AVAILABLE;
     }
+  }
+
+  private async validateCreateStemRequest(
+    body: { data?: string },
+    files: { stem?: Express.Multer.File[] },
+  ): Promise<StemRequestDto> {
+    if (!files.stem || !files.stem[0]) {
+      throw this.exceptions.FILE_NOT_FOUND;
+    }
+    if (!body.data) {
+      throw this.exceptions.DATA_NOT_FOUND;
+    }
+
+    let parsedBody: StemRequestDto = null;
+    try {
+      parsedBody = JSON.parse(body.data);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+
+    try {
+      await validateOrReject(parsedBody);
+    } catch (errors) {
+      throw new BadRequestException(errors);
+    }
+
+    return parsedBody;
+  }
+
+  @Post('by-slug/:slug/stems')
+  @Roles(Role.User, Role.Admin)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'data', maxCount: 1 },
+      { name: 'stem', maxCount: 1 },
+    ]),
+  )
+  async createStemBySlug(
+    @Session() session: SessionData,
+    @Param('slug') slug: string,
+    @Body() body: { data?: string },
+    @UploadedFiles() files: { stem?: Express.Multer.File[] },
+  ): Promise<StemProcessingResponseDto> {
+    const parsedBody = await this.validateCreateStemRequest(body, files);
+
+    const song = await this.service.getSongByBandBySlug(session.bandId, slug);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    return StemProcessingResponseDto.entityToDto(
+      await this.stemService.uploadStemForSong(
+        song,
+        parsedBody,
+        files.stem[0].path,
+      ),
+    );
   }
 }

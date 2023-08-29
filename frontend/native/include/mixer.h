@@ -50,6 +50,7 @@ public:
     void set_track_length(uint32_t samples);
     uint32_t track_length() const;
 
+    size_t count_stems() const;
     void update_stem_info(const std::vector<stem_info>& info);
 
     uint32_t waveform_ordinal(uint32_t stem_id) const;

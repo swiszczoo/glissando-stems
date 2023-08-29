@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 
 import { Config } from '../config';
+import '../virtual-column-polyfill';
 
 @Global()
 @Module({

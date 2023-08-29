@@ -48,6 +48,11 @@ uint32_t StemManager::track_length() const
     return _length;
 }
 
+size_t StemManager::count_stems() const
+{
+    return _stems.size();
+}
+
 void StemManager::toggle_mute(uint32_t stem_id)
 {
     if (_soloed_stem != nullopt) {

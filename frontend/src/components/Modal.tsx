@@ -91,7 +91,7 @@ function GlissandoModal(props: React.PropsWithChildren<GlissandoModalProps>) {
               </ModalSection>
               {
                 props.buttons && 
-                <ModalSection style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end'}}>
+                <ModalSection style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center'}}>
                   <props.buttons/>
                 </ModalSection>
               }

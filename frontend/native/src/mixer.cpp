@@ -169,6 +169,11 @@ uint32_t Mixer::track_length() const
     return _length;
 }
 
+size_t Mixer::count_stems() const
+{
+    return _stems.count_stems();
+}
+
 void Mixer::update_stem_info(const std::vector<stem_info>& info)
 {
     _stems.update_stem_info(info);
@@ -209,7 +214,7 @@ bool Mixer::stem_soloed(uint32_t stem_id) const
 void Mixer::thread_main()
 {
     int last_underflows = _buffer->underflow_count();
-    int undeflow_check_countdown = 1000;
+    int undeflow_check_countdown = UNDERFLOW_COUNTDOWN_INITIAL_VALUE;
 
     std::cout << "[MIXER] Audio processing thread started" << std::endl;
 

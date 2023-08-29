@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router';
 import { styled } from '@mui/system';
 
 import InstrumentTile from './InstrumentTile';
@@ -13,7 +12,6 @@ import { withSeeking } from './withSeeking';
 import { InstrumentMap, UnknownInstrument } from '../data/instruments';
 
 import { useNative } from '../hooks/useNative';
-import { useQueryData } from '../hooks/useQueryData';
 import { useSession } from '../hooks/useSession';
 
 const EditorTracksContainer = styled('div')(({ theme }) => ({
@@ -141,14 +139,16 @@ function EditorTrack(props: EditorTrackProps) {
   );
 }
 
-interface StemData {
+export interface StemData {
   id: number;
   name: string;
   instrument: string;
   path: string;
+  losslessPath: string;
   samples: number;
   gainDecibels: number;
   offset: number;
+  pan: number;
 }
 
 function stemDataToStemInfo(pathPrefix: string, data: StemData): StemInfo {
@@ -156,7 +156,7 @@ function stemDataToStemInfo(pathPrefix: string, data: StemData): StemInfo {
     id: data.id,
     gainDb: data.gainDecibels,
     offset: data.offset,
-    pan: 0,
+    pan: data.pan,
     path: pathPrefix + '/' + data.path,
     samples: data.samples,
   };
@@ -164,12 +164,12 @@ function stemDataToStemInfo(pathPrefix: string, data: StemData): StemInfo {
 
 interface EditorTracksProps {
   form: FormType;
+  data: StemData[];
 }
 
 function EditorTracks(props: EditorTracksProps) {
-  const { slug } = useParams();
+  const { data } = props;
   const [ native, ] = useNative();
-  const data = useQueryData(['stems', slug]) as StemData[];
   const { stemLocationPrefix } = useSession();
 
   const sortedStems = useMemo(() => {

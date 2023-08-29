@@ -9,8 +9,6 @@ import { Config } from '../config';
 import { Song } from './entities/song.entity';
 import { Stem, StemStatus } from './entities/stem.entity';
 
-export type SongWithStemCount = Song & { stemCount: number };
-
 interface CreateSongParams {
   bpm: number;
   title: string;
@@ -27,12 +25,15 @@ export class SongService {
     private configService: ConfigService<Config>,
   ) {}
 
-  async getAllSongsByBand(bandId: number): Promise<SongWithStemCount[]> {
-    const songs = (await this.songRepository
+  async getAllSongsByBand(bandId: number): Promise<Song[]> {
+    const songs = await this.songRepository
       .createQueryBuilder('song')
-      .loadRelationCountAndMap('song.stemCount', 'song.stems')
+      .leftJoin('stem', 'stem', 'song.id = stem.songId')
+      .addSelect('COUNT(stem.id)', 'stemCount')
+      .addSelect('COALESCE(MAX(stem.samples + stem.offset), 0) AS samples')
       .where('song.ownerId = :id', { id: bandId })
-      .getMany()) as SongWithStemCount[];
+      .groupBy('song.id')
+      .getMany();
 
     return songs;
   }
@@ -40,12 +41,15 @@ export class SongService {
   async getSongByBand(
     bandId: number,
     songId: number,
-  ): Promise<SongWithStemCount | undefined> {
-    const songs = (await this.songRepository
+  ): Promise<Song | undefined> {
+    const songs = await this.songRepository
       .createQueryBuilder('song')
-      .loadRelationCountAndMap('song.stemCount', 'song.stems')
+      .leftJoin('stem', 'stem', 'song.id = stem.songId')
+      .addSelect('COUNT(stem.id)', 'stemCount')
+      .addSelect('COALESCE(MAX(stem.samples + stem.offset), 0) AS samples')
       .where('song.ownerId = :bandId AND song.id = :songId', { bandId, songId })
-      .getMany()) as SongWithStemCount[];
+      .groupBy('song.id')
+      .getMany();
 
     if (songs.length !== 1) {
       return undefined;
@@ -57,12 +61,15 @@ export class SongService {
   async getSongByBandBySlug(
     bandId: number,
     slug: string,
-  ): Promise<SongWithStemCount | undefined> {
-    const songs = (await this.songRepository
+  ): Promise<Song | undefined> {
+    const songs = await this.songRepository
       .createQueryBuilder('song')
-      .loadRelationCountAndMap('song.stemCount', 'song.stems')
+      .leftJoin('stem', 'stem', 'song.id = stem.songId')
+      .addSelect('COUNT(stem.id)', 'stemCount')
+      .addSelect('COALESCE(MAX(stem.samples + stem.offset), 0) AS samples')
       .where('song.ownerId = :bandId AND song.slug = :slug', { bandId, slug })
-      .getMany()) as SongWithStemCount[];
+      .groupBy('song.id')
+      .getMany();
 
     if (songs.length !== 1) {
       return undefined;
@@ -74,15 +81,15 @@ export class SongService {
   async createSongByBand(
     bandId: number,
     params: CreateSongParams,
-  ): Promise<SongWithStemCount> {
-    const song = (await this.songRepository.save({
+  ): Promise<Song> {
+    const song = await this.songRepository.save({
       bpm: params.bpm,
       form: params.form,
       owner: { id: bandId },
       samples: 0,
       slug: nanoid.nanoid(NANOID_SIZE),
       title: params.title,
-    })) as SongWithStemCount;
+    });
 
     song.stemCount = 0;
     return song;

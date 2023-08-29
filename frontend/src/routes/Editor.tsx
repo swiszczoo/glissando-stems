@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Logo from '../assets/logo.svg';
 
 import EditorNavbar from '../components/EditorNavbar';
-import EditorTracks from '../components/EditorTracks';
+import EditorTracks, { StemData } from '../components/EditorTracks';
 import LoadingBar from '../components/LoadingBar';
 import PeakMeter from '../components/PeakMeter';
 import SolidBackgroundFrame from '../components/SolidBackgroundFrame';
@@ -84,6 +84,7 @@ function PlaybackStateChangeDetector(props: PlaybackStateChangeDetectorProps) {
 
 interface EditorContentProps {
   song: SongData;
+  stems: StemData[];
 }
 
 function EditorContent(props: EditorContentProps) {
@@ -103,7 +104,7 @@ function EditorContent(props: EditorContentProps) {
     <>
       <EditorNavbar songTitle={title} songBpm={bpm}/>
       <ContentContainer>
-        <EditorTracks form={form}/>
+        <EditorTracks form={form} data={props.stems}/>
         <PeakMeter />
         { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
       </ContentContainer>
@@ -134,7 +135,7 @@ function EditorRoute() {
   return (
     <SolidBackgroundFrame>
       { loading && <LoaderContent /> }
-      { !loading && <EditorContent key={slug} song={songQuery.data}/> }
+      { !loading && <EditorContent key={slug} song={songQuery.data} stems={stemQuery.data}/> }
     </SolidBackgroundFrame>
   );
 }

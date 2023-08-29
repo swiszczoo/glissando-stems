@@ -3,6 +3,8 @@
 #include <audio-buffer.h>
 
 
+const int Metronome::TICK_OFFSET = 128;
+
 Metronome::Metronome()
     : _bpm(120.0)
     , _gain(1.0)
@@ -38,12 +40,12 @@ double Metronome::gain() const
 
 void Metronome::process(uint32_t first_sample)
 {
-    uint32_t prev_tick_id = floor((first_sample - 1) / _samples_per_beat);
+    uint32_t prev_tick_id = floor((first_sample + TICK_OFFSET - 1) / _samples_per_beat);
     for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
-        uint32_t sample = first_sample + i;
+        uint32_t sample = first_sample + i + TICK_OFFSET;
         uint32_t next_tick_id = floor(sample / _samples_per_beat);
 
-        if (prev_tick_id + 1 == next_tick_id || sample == 0) {
+        if (prev_tick_id + 1 == next_tick_id || sample == TICK_OFFSET) {
             // Metronome should tick right now
             if (next_tick_id % 4 == 0) {
                 // Bar tick

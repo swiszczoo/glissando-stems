@@ -1,20 +1,27 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useParams } from 'react-router';
 import { styled } from '@mui/system';
+import { useQueryClient } from '@tanstack/react-query';
+import { AxiosProgressEvent } from 'axios';
+
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 
 import Input from './Input';
 import Modal from './Modal';
 import { GreenButton, NormalButton, RedButton } from './NavbarButton';
+import ProgressBar from './ProgressBar';
 import { GlissandoOption, GlissandoSelect } from './Select';
 import Slider from './Slider';
 
 import { InstrumentMap } from '../data/instruments';
 
+import { useAxios } from '../hooks/useAxios';
 import { useNative } from '../hooks/useNative';
+import LoadingBar from './LoadingBar';
 
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
-import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 
 const uploadAccept = {
   'audio/*': []
@@ -58,21 +65,28 @@ const SliderBox = styled('div')(() => ({
 }));
 
 interface UploadModalProps {
+  slug: string;
   file?: File;
+  onInvalidate?: () => void;
+  onClose?: () => void;
 }
 
 const numberRegex = /^-?[0-9]{0,6}$/;
 
 function UploadModal(props: UploadModalProps) {
+  const axios = useAxios();
   const [ native, ] = useNative()
   const [ name, setName ] = useState('');
   const [ instrument, setInstrument ] = useState('other');
   const [ offset, setOffset ] = useState<number | string>(0);
   const [ gain, setGain ] = useState(0);
   const [ pan, setPan ] = useState(0);
+  const [ action, setAction ] = useState('');
+  const [ actionState, setActionState ] = useState<'idle' | 'sending' | 'converting'>('idle');
+  const [ uploadProgress, setUploadProgress ] = useState(0);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.currentTarget.value);
+    setName(event.currentTarget.value.substring(0, 255));
   }
 
   const handleInstrumentChange = (_: unknown, newValue: unknown) => {
@@ -103,7 +117,75 @@ function UploadModal(props: UploadModalProps) {
     setPan(value as number);
   };
 
+  const handleUploadClick = () => {
+    if (!props.file) return;
+
+    setUploadProgress(0);
+    setAction('Wysyłanie pliku...');
+    setActionState('sending');
+
+    const formData = new FormData();
+    const stemData = {
+      name,
+      instrument,
+      offset,
+      gainDecibels: gain,
+      pan,
+    };
+
+    const uploadProgressHandler = (event: AxiosProgressEvent) => {
+      const progress = event.loaded / event.total!
+      setUploadProgress(progress);
+      setAction(`Wysyłanie pliku (${(progress * 100).toFixed()}%)...`);
+    };
+
+    const checkFileState = async (id: number) => {
+      axios.get(`/api/songs/by-slug/${props.slug}/stems/${id}`).then((res) => {
+        const processing = res.data['processing'];
+        const failed = res.data['failed'];
+        const path = res.data['path'];
+
+        if (!processing && !failed && path) {
+          if (props.onClose) props.onClose();
+          if (props.onInvalidate) props.onInvalidate();
+        } else if (processing) {
+          setTimeout(checkFileState.bind(null, id), 1000);
+        } else if (failed) {
+          alert('Przetwarzanie pliku nie powiodło się!');
+          if (props.onClose) props.onClose();
+        }
+      }).catch(() => {
+        alert('Przetwarzanie pliku nie powiodło się!');
+        if (props.onClose) props.onClose();
+        if (props.onInvalidate) props.onInvalidate();
+      });
+    };
+
+    formData.set('data', JSON.stringify(stemData));
+    formData.set('stem', props.file);
+    axios.post(`/api/songs/by-slug/${props.slug}/stems`, formData, {
+      onUploadProgress: uploadProgressHandler,
+    }).then((res) => {
+      setAction('Konwertowanie...');
+      setActionState('converting');
+
+      checkFileState(res.data['id']);
+    }).catch(() => {
+      alert('Wysyłanie pliku nie powiodło się!');
+      setAction('');
+      setActionState('idle');
+    });
+  };
+
   const offsetInMillis = typeof offset === 'number' ? (offset / native!.getSampleRate() * 1000) : 0;
+  const canUpload = name.trim().length > 0 && typeof offset === 'number' && actionState === 'idle';
+
+
+  const handleBlur = () => {
+    if (actionState === 'idle' && props.onClose) {
+      props.onClose();
+    }
+  };
 
   const instrumentList = useMemo(() => {
     const instruments: React.JSX.Element[] = [];
@@ -121,10 +203,16 @@ function UploadModal(props: UploadModalProps) {
   }, []);
 
   return (
-    <Modal title='Utwórz nową ścieżkę dla pliku' open={!!props.file} buttons={() =>
+    <Modal title='Utwórz nową ścieżkę dla pliku' open={!!props.file} onBlur={handleBlur} buttons={() =>
       <>
-        <RedButton><CloseRoundedIcon />&nbsp;Anuluj</RedButton>&nbsp;&nbsp;
-        <GreenButton><UploadFileRoundedIcon />&nbsp;Wyślij</GreenButton>
+        {action}
+        <span style={{ flexGrow: 1}} />
+        <RedButton disabled={actionState !== 'idle'} onClick={props.onClose}>
+          <CloseRoundedIcon />&nbsp;Anuluj
+        </RedButton>&nbsp;&nbsp;
+        <GreenButton disabled={!canUpload} onClick={handleUploadClick}>
+          { actionState !== 'idle' ? '\u2022 \u2022 \u2022' : <><UploadFileRoundedIcon />&nbsp;Wyślij</> }
+        </GreenButton>
       </>
     }>
       Nazwa ścieżki:
@@ -163,14 +251,22 @@ function UploadModal(props: UploadModalProps) {
           </NormalButton>
         </>
       }
+      {
+        actionState === 'converting' 
+        ? <LoadingBar />
+        : <ProgressBar value={uploadProgress} enabled={actionState === 'sending'}/>
+      }
     </Modal>
   );
 }
 
 function UploadZone() {
+  const { slug } = useParams();
   const [ processedFile, setProcessedFile ] = useState<File | undefined>(undefined);
+  const [ modalKey, setModalKey ] = useState(0);
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setProcessedFile(acceptedFiles[0]);
+    setModalKey(key => key + 1);
   }, []);
 
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } = useDropzone({
@@ -178,6 +274,8 @@ function UploadZone() {
     accept: uploadAccept,
     maxFiles: 1,
   });
+
+  const queryClient = useQueryClient();
   const className = (() => {
     if (isDragAccept) return 'accept';
     if (isDragReject) return 'reject';
@@ -185,13 +283,22 @@ function UploadZone() {
     return '';
   })();
 
+  const handleClose = () => {
+    setProcessedFile(undefined);
+  };
+
+  const handleInvalidate = () => {
+    queryClient.invalidateQueries(['songs', slug]);
+    queryClient.invalidateQueries(['stems', slug]);
+  };
+
   return (
     <>
       <UploadZoneContainer className={className} {...getRootProps()}>
         <input {...getInputProps()} />
         Upuść tutaj plik, aby utworzyć nową ścieżkę...
       </UploadZoneContainer>
-      <UploadModal file={processedFile}/>
+      <UploadModal key={modalKey} slug={slug!} file={processedFile} onClose={handleClose} onInvalidate={handleInvalidate}/>
     </>
   );
 }

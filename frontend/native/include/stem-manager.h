@@ -36,6 +36,8 @@ public:
     void set_track_length(uint32_t samples);
     uint32_t track_length() const;
 
+    size_t count_stems() const;
+
     void toggle_mute(uint32_t stem_id);
     void toggle_solo(uint32_t stem_id);
     bool stem_muted(uint32_t stem_id) const;

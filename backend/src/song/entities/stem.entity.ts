@@ -1,10 +1,17 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import { Song } from './song.entity';
 
 export enum StemStatus {
   RESERVED = 'reserved',
   PROCESSING = 'processing',
+  FAILED = 'failed',
   READY = 'ready',
   DELETED = 'deleted',
 }
@@ -39,6 +46,9 @@ export class Stem {
   @Column('float', { nullable: false, default: 0 })
   public gainDecibels: number;
 
+  @Column('float', { nullable: false, default: 0 })
+  public pan: number;
+
   @Column('int', { nullable: false, default: 0 })
   public offset: number;
 
@@ -59,4 +69,10 @@ export class Stem {
 
   @Column('varchar', { nullable: true, length: 512 })
   public location?: string;
+
+  @Column('varchar', { nullable: true, length: 512 })
+  public hqLocation?: string;
+
+  @CreateDateColumn()
+  public createdAt: Date;
 }

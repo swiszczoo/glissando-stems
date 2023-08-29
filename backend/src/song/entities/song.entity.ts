@@ -7,6 +7,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { VirtualColumn } from '../../virtual-column';
+
 import { Band } from 'src/user/entities/band.entity';
 import { Stem } from './stem.entity';
 
@@ -32,9 +34,12 @@ export class Song {
   @Column('simple-json', { nullable: false })
   public form: { bar: number; name: string }[];
 
-  @Column('int', { nullable: false })
-  public samples: number;
-
   @OneToMany(() => Stem, (stem) => stem.song)
   public stems: Stem[];
+
+  @VirtualColumn('int')
+  public stemCount: number;
+
+  @VirtualColumn('int')
+  public samples: number;
 }

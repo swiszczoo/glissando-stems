@@ -36,7 +36,6 @@ const PrimaryBar = styled('div')(({ theme }) => ({
   pointerEvents: 'none',
   userSelect: 'none',
   zIndex: 1,
-  transform: 'translateX(-1.5px)',
   '&.plus100': {
     letterSpacing: -1,
   },
@@ -59,7 +58,6 @@ const SecondaryBar = styled('div')(({ theme }) => ({
   borderLeft: `2px solid ${theme.palette.primary.dark}`,
   pointerEvents: 'none',
   zIndex: 0,
-  transform: 'translateX(-1px)',
 }));
 
 const FormMarkerBar = styled('div')(({ theme }) => ({
@@ -70,7 +68,6 @@ const FormMarkerBar = styled('div')(({ theme }) => ({
   borderLeft: `3px solid ${theme.palette.primary.main}`,
   userSelect: 'none',
   zIndex: 2,
-  transform: 'translateX(-1.5px)',
 }));
 
 const FormMarkerFlag = styled('div')(({ theme }) => ({
@@ -160,7 +157,7 @@ function Timeline(props: TimelineProps) {
       if (barPositions[marker.bar - 1] === undefined) return <></>;
 
       const position = barPositions[marker.bar - 1] / trackLength;
-      return <FormMarker position={position} name={marker.name} />;
+      return <FormMarker key={marker.bar} position={position} name={marker.name} />;
     })
   ), [barPositions, props.form, trackLength]);
 

@@ -22,6 +22,7 @@ private:
     static const int SOUND_BAR_SAMPLES;
     static const uint8_t SOUND_BEAT[];
     static const int SOUND_BEAT_SAMPLES;
+    static const int TICK_OFFSET;
 
     double _bpm;
     double _samples_per_beat;

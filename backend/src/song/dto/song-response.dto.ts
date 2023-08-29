@@ -1,4 +1,4 @@
-import { SongWithStemCount } from '../song.service';
+import { Song } from '../entities/song.entity';
 
 export class SongResponseDto {
   id: number;
@@ -12,7 +12,7 @@ export class SongResponseDto {
 
   static entityToDto(
     samplesToSeconds: (samples: number) => number,
-    entity: SongWithStemCount,
+    entity: Song,
   ) {
     return {
       id: entity.id,
