@@ -4,3 +4,6 @@
 [submodule "frontend/native/lib/lodepng"]
 	path = frontend/native/lib/lodepng
 	url = https://github.com/lvandeve/lodepng
+[submodule "frontend/native/lib/cgif"]
+	path = frontend/native/lib/cgif
+	url = https://github.com/dloebl/cgif

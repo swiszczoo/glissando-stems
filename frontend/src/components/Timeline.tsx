@@ -154,10 +154,10 @@ function Timeline(props: TimelineProps) {
 
   const formMarkers = useMemo(() => (
     props.form.map((marker) => {
-      if (barPositions[marker.bar - 1] === undefined) return <></>;
+      if (barPositions[marker.bar - 1] === undefined) return undefined;
 
       const position = barPositions[marker.bar - 1] / trackLength;
-      return <FormMarker key={marker.bar} position={position} name={marker.name} />;
+      return <FormMarker key={marker.name} position={position} name={marker.name} />;
     })
   ), [barPositions, props.form, trackLength]);
 

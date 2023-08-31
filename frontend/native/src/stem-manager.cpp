@@ -293,9 +293,9 @@ void StemManager::run_waveform_processing(StemEntryPtr stem, uint32_t prev_ordin
 
 void StemManager::process_stem(StemEntryPtr stem)
 {
-    pthread_t tid = pthread_self();
+    uint32_t sid = stem->info.id;
 
-    printf("Thread %lu: Downloading \"%s\"\n", tid, stem->info.path.c_str());
+    printf("Stem %u: Downloading \"%s\"\n", sid, stem->info.path.c_str());
 
     emscripten_fetch_attr_t attr;
     emscripten_fetch_attr_init(&attr);
@@ -304,7 +304,7 @@ void StemManager::process_stem(StemEntryPtr stem)
     emscripten_fetch_t* fetch = emscripten_fetch(&attr, stem->info.path.c_str());
 
     if (fetch->status < 200 || fetch->status > 299) {
-        fprintf(stderr, "Thread %lu: Download failed!\n", tid);
+        fprintf(stderr, "Stem %u: Download failed!\n", sid);
 
         stem->error = true;
         return;
@@ -315,8 +315,8 @@ void StemManager::process_stem(StemEntryPtr stem)
         return;
     }
 
-    printf("Thread %lu: Download finished. Got %llu bytes. Starting vorbis decoder...\n", 
-        tid, fetch->numBytes);
+    printf("Stem %u: Download finished. Got %llu bytes. Starting vorbis decoder...\n", 
+        sid, fetch->numBytes);
 
     bool vorbis_ok = decode_vorbis_stream(stem, fetch->data, fetch->numBytes);
     emscripten_fetch_close(fetch);
@@ -324,14 +324,14 @@ void StemManager::process_stem(StemEntryPtr stem)
     if (stem->deleted) return;
 
     if (vorbis_ok) {
-        printf("Thread %lu: Vorbis data has been decoded.\n", tid);
+        printf("Stem %u: Vorbis data has been decoded.\n", sid);
 
         stem->data_ready = true;
         process_stem_waveform(stem, 0);
 
-        printf("Thread %lu: Initial waveform image has been generated.\n", tid);
+        printf("Stem %u: Initial waveform image has been generated.\n", sid);
     } else {
-        fprintf(stderr, "Thread %lu: Vorbis decoding failed!\n", tid);
+        fprintf(stderr, "Stem %u: Vorbis decoding failed!\n", sid);
         stem->error = true;
     }
 }
@@ -392,6 +392,8 @@ void StemManager::process_stem_waveform(StemEntryPtr stem, uint32_t prev_ordinal
         if (stem->waveform_ordinal == prev_ordinal) {
             stem->waveform_base64 = std::move(data_uri);
             ++stem->waveform_ordinal;
+        } else {
+            printf("Stem %u: Waveform not saved due to being obsolete!\n", stem->info.id);
         }
     }
 }

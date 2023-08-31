@@ -227,6 +227,10 @@ uint32_t WaveformRenderer::get_column_end_sample(int x, uint32_t total_length) c
 
 int WaveformRenderer::peak_to_pixel(int16_t peak) const
 {
-    return static_cast<int>(round((32767. - static_cast<double>(peak)) / 65535. * _output_height));
+    // XDDD off by one error (there was no [height - 1] cap) 
+    // that caused heap armageddon and 7 hours of debugging
+    
+    return std::min(_output_height - 1,
+        static_cast<int>(round((32767. - static_cast<double>(peak)) / 65535. * (_output_height))));
 }
 

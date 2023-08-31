@@ -180,13 +180,6 @@ function UploadModal(props: UploadModalProps) {
   const offsetInMillis = typeof offset === 'number' ? (offset / native!.getSampleRate() * 1000) : 0;
   const canUpload = name.trim().length > 0 && typeof offset === 'number' && actionState === 'idle';
 
-
-  const handleBlur = () => {
-    if (actionState === 'idle' && props.onClose) {
-      props.onClose();
-    }
-  };
-
   const instrumentList = useMemo(() => {
     const instruments: React.JSX.Element[] = [];
     
@@ -203,7 +196,7 @@ function UploadModal(props: UploadModalProps) {
   }, []);
 
   return (
-    <Modal title='Utwórz nową ścieżkę dla pliku' open={!!props.file} onBlur={handleBlur} buttons={() =>
+    <Modal title='Utwórz nową ścieżkę dla pliku' open={!!props.file} buttons={() =>
       <>
         {action}
         <span style={{ flexGrow: 1}} />

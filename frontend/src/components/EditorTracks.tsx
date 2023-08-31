@@ -53,7 +53,7 @@ const TrackLabel = styled('div')(({ theme }) => ({
   textAlign: 'center',
   bottom: 0,
   width: '100%',
-  background: 'rgba(0, 0, 0, 0.5)',
+  background: 'rgba(0, 0, 0, 0.7)',
   whiteSpace: 'nowrap',
   textOverflow: 'ellipsis',
   overflow: 'hidden',
