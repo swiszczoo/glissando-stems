@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { styled } from '@mui/system';
 
 import InstrumentTile from './InstrumentTile';
 import MuteSolo from './MuteSolo';
 import PlaybackIndicator from './PlaybackIndicator';
+import StemMenu from './StemMenu';
 import Timeline from './Timeline';
 import UploadZone from './UploadZone';
 
@@ -42,6 +43,11 @@ const TrackContainer = styled('div')(({ theme }) => ({
 const TrackTile = styled(InstrumentTile)(({ theme }) => ({
   width: theme.spacing(9),
   height: theme.spacing(9),
+  cursor: 'pointer',
+  transition: '0.2s',
+  '&:hover, &.active': {
+    borderColor: theme.palette.primary.dark,
+  },
 }));
 
 const TrackLabel = styled('div')(({ theme }) => ({
@@ -91,14 +97,20 @@ const WaveformLoader = styled('div')(({ theme }) => ({
 }));
 
 interface EditorTrackProps {
+  songName: string;
   stemId: number;
   stemOrdinal: number;
   instrument: string;
   name: string;
+  losslessStemUrl: string;
+  contextMenuOpen?: boolean;
+  onClick?: () => void;
+  onContextMenuBlur?: () => void;
 }
 
 function EditorTrack(props: EditorTrackProps) {
   const [ native, ] = useNative();
+  const trackTileRef = useRef<HTMLDivElement>(null);
   const waveformOrdinal = native!.getWaveformOrdinal(props.stemId);
 
   const waveformDataUri = useMemo(() => {
@@ -121,7 +133,14 @@ function EditorTrack(props: EditorTrackProps) {
 
   return (
     <TrackContainer>
-      <TrackTile instrument={props.instrument} icon title={props.name}>
+      <TrackTile 
+        className={props.contextMenuOpen ? 'active' : ''}
+        onClick={props.onClick} 
+        ref={trackTileRef} 
+        instrument={props.instrument} 
+        icon 
+        title={props.name}>
+
         <TrackLabel>{props.name}</TrackLabel>
       </TrackTile>
       <span style={{ width: 8 }} />
@@ -135,6 +154,12 @@ function EditorTrack(props: EditorTrackProps) {
       <WaveformTile instrument={props.instrument}>
         { waveformView }
       </WaveformTile>
+      <StemMenu 
+        anchorEl={trackTileRef.current} 
+        open={props.contextMenuOpen} 
+        onBlur={props.onContextMenuBlur}
+        losslessStemUrl={props.losslessStemUrl}
+        downloadFilename={`${props.name} - [${props.songName}].flac`}/>
     </TrackContainer>
   );
 }
@@ -163,6 +188,7 @@ function stemDataToStemInfo(pathPrefix: string, data: StemData): StemInfo {
 }
 
 interface EditorTracksProps {
+  songName: string;
   form: FormType;
   data: StemData[];
 }
@@ -171,6 +197,7 @@ function EditorTracks(props: EditorTracksProps) {
   const { data } = props;
   const [ native, ] = useNative();
   const { stemLocationPrefix } = useSession();
+  const [ contextMenuStemId, setContextMenuStemId ] = useState<number | undefined>(undefined);
 
   const sortedStems = useMemo(() => {
     const sortFunc = (a: StemData, b: StemData) => {
@@ -190,6 +217,14 @@ function EditorTracks(props: EditorTracksProps) {
     vector.delete();
   }, [data, native, stemLocationPrefix]);
 
+  const handleTrackClick = (stemId: number) => {
+    setContextMenuStemId(stemId);
+  };
+
+  const handleTrackCtxMenuBlur = () => {
+    setContextMenuStemId(undefined);
+  }
+
   return (
     <EditorTracksContainer>
       <Timeline form={props.form}/>
@@ -201,7 +236,12 @@ function EditorTracks(props: EditorTracksProps) {
               stemId={stem.id}
               stemOrdinal={index}
               instrument={stem.instrument} 
-              name={stem.name}/>
+              name={stem.name}
+              losslessStemUrl={stemLocationPrefix! + '/' + stem.losslessPath}
+              songName={props.songName}
+              contextMenuOpen={contextMenuStemId === stem.id}
+              onClick={handleTrackClick.bind(null, stem.id)}
+              onContextMenuBlur={handleTrackCtxMenuBlur} />
           ))
         }
         <UploadZone />

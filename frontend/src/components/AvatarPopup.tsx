@@ -53,7 +53,7 @@ function AvatarPopup(props: AvatarPopupProps) {
   }, [onBlur]);
 
   return (
-    <Popper open={!!props.open} anchorEl={props.anchorEl} placement="bottom-end">
+    <Popper style={{ zIndex: 9999 }} open={!!props.open} anchorEl={props.anchorEl} placement="bottom-end">
       <ClickAwayListener onClickAway={handleClickAway}>
         <PopupFrame>
           <PopupCell>

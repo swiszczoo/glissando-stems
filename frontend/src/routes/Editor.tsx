@@ -104,7 +104,7 @@ function EditorContent(props: EditorContentProps) {
     <>
       <EditorNavbar songTitle={title} songBpm={bpm}/>
       <ContentContainer>
-        <EditorTracks form={form} data={props.stems}/>
+        <EditorTracks songName={title} form={form} data={props.stems}/>
         <PeakMeter />
         { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
       </ContentContainer>

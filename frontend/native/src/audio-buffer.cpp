@@ -28,15 +28,19 @@ int AudioBuffer::underflow_count() const
 bool AudioBuffer::operator>>(audio_chunk& target)
 {
     std::lock_guard lock(_read_lock);
+    int current_read_idx = _read_idx.load();
 
-    if (_read_idx == _write_idx) {
+    if (current_read_idx == _write_idx) {
         ++_underflow_count;
         return false;
     }
 
-    memcpy(&target, &_chunk_array[_read_idx], sizeof(audio_chunk));
-    int next_cell = (_read_idx + 1) % _array_size; 
-    _read_idx = next_cell;
+    memcpy(&target, &_chunk_array[current_read_idx], sizeof(audio_chunk));
+
+    int next_cell = current_read_idx + 1;
+    if (next_cell >= _array_size) next_cell = 0;
+
+    _read_idx.compare_exchange_strong(current_read_idx, next_cell);
     _read_idx.notify_one();
     return true;
 }
@@ -44,8 +48,11 @@ bool AudioBuffer::operator>>(audio_chunk& target)
 AudioBuffer& AudioBuffer::operator<<(const audio_chunk& source)
 {
     std::unique_lock lock(_write_lock);
+    int current_write_idx = _write_idx;
 
-    int next_cell = (_write_idx + 1) % _array_size;
+    int next_cell = current_write_idx + 1;
+    if (next_cell >= _array_size) next_cell = 0;
+
     int previous_reset_counter = _reset_counter;
     lock.unlock();
 
@@ -54,8 +61,8 @@ AudioBuffer& AudioBuffer::operator<<(const audio_chunk& source)
     lock.lock();
 
     if (previous_reset_counter == _reset_counter) {
-        memcpy(&_chunk_array[_write_idx], &source, sizeof(audio_chunk));
-        _write_idx = next_cell;
+        memcpy(&_chunk_array[current_write_idx], &source, sizeof(audio_chunk));
+        _write_idx.compare_exchange_strong(current_write_idx, next_cell);
     }
 
     return *this;

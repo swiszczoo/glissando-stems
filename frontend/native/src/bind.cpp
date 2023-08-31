@@ -38,6 +38,7 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("toggleSolo", &Mixer::toggle_solo)
         .function("isStemMuted", &Mixer::stem_muted)
         .function("isStemSoloed", &Mixer::stem_soloed)
+        .function("getLimiterReductionDb", &Mixer::limiter_reduction_db)
         ;
     value_object<stem_info>("StemInfo")
         .field("id", &stem_info::id)

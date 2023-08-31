@@ -117,7 +117,7 @@ function PeakMeter() {
       setLimiterReduction(0);
       setDb([-100, -100]);
     } else {
-      setLimiterReduction(window.audioLimiter?.reduction || 0);
+      setLimiterReduction(mixer.getLimiterReductionDb());
       setDb([mixer.getLeftChannelOutDb(), mixer.getRightChannelOutDb()]);
     }
   }, []));

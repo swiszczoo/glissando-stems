@@ -7,6 +7,7 @@
 
 // Forward declarations
 class AudioBuffer;
+class Limiter;
 class Metronome;
 class PeakMeter;
 
@@ -61,6 +62,8 @@ public:
     bool stem_muted(uint32_t stem_id) const;
     bool stem_soloed(uint32_t stem_id) const;
 
+    double limiter_reduction_db() const;
+
 private:
     enum class PlaybackState {
       PLAYING,
@@ -81,6 +84,8 @@ private:
     std::atomic_bool _metronome_enabled;
     std::atomic<double> _metronome_gain_db;
     std::atomic<double> _bpm;
+    
+    std::unique_ptr<Limiter> _limiter;
 
     SpinLock _mixdown_lock;
 

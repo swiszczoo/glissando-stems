@@ -71,24 +71,13 @@ void AudioWorklet::callback_audio_worklet_processor_created(
         audio_context, WORKLET_NODE_NAME, &options, 
         &AudioWorklet::callback_process_audio, user_data);
 
-    // Setup audio path with limiter
+    // Setup audio path
     EM_ASM({
-
         const audioCtx = emscriptenGetAudioObject($1);
 
-        // Configure limiter
-        const limiter = new DynamicsCompressorNode(audioCtx);
-        limiter.threshold.setValueAtTime(-1, audioCtx.currentTime);
-        limiter.knee.setValueAtTime(0, audioCtx.currentTime);
-        limiter.ratio.setValueAtTime(20, audioCtx.currentTime);
-        limiter.attack.setValueAtTime(0.005, audioCtx.currentTime);
-        limiter.release.setValueAtTime(0.024, audioCtx.currentTime);
-
-        emscriptenGetAudioObject($0).connect(limiter);
-        limiter.connect(audioCtx.destination);
+        emscriptenGetAudioObject($0).connect(audioCtx.destination);
 
         window.audioContext = audioCtx;
-        window.audioLimiter = limiter;
         console.info(`Output sample rate is ${window.audioContext.sampleRate} Hz`);
 
     }, wasm_audio_worklet, audio_context);

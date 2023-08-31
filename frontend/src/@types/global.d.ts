@@ -1,6 +1,5 @@
 interface Window {
   audioContext?: AudioContext;
-  audioLimiter?: DynamicsCompressorNode;
   _wasmInitialized?: () => void;
   _invalidateModuleContext?: () => void;
   
@@ -46,6 +45,7 @@ interface NativeMixer {
   toggleSolo: (stemId: number) => void;
   isStemMuted: (stemId: number) => boolean;
   isStemSoloed: (stemId: number) => boolean;
+  getLimiterReductionDb: () => number;
 }
 
 type FormType = { bar: number; name: string; }[];

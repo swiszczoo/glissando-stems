@@ -24,6 +24,7 @@ interface InstrumentTileProps {
   icon?: boolean;
   className?: string;
   title?: string;
+  onClick?: () => void;
 }
 
 const InstrumentTileBase = styled('div')(({ theme }) => ({
@@ -50,7 +51,8 @@ const InstrumentTile = forwardRef((props: React.PropsWithChildren<InstrumentTile
       ref={ref} 
       style={{ background }} 
       className={props.className}
-      title={props.title}>
+      title={props.title}
+      onClick={props.onClick}>
         { props.icon && instrumentData.iconSrc.length > 0 && <InstrumentIcon src={instrumentData.iconSrc}/>}
         {props.children}
     </InstrumentTileBase>

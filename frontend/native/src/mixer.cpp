@@ -1,6 +1,7 @@
 #include <mixer.h>
 
 #include <audio-buffer.h>
+#include <limiter.h>
 #include <metronome.h>
 #include <peak-meter.h>
 #include <utils.h>
@@ -24,11 +25,17 @@ Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     , _metronome_enabled(false)
     , _metronome_gain_db(1.0)
     , _bpm(120.0)
+    , _limiter(std::make_unique<Limiter>())
 {
     _stems.set_bg_task_complete_callback(
         std::bind(&Mixer::invalidate_state, this));
 
     _thread = std::thread(&Mixer::thread_main, this);
+
+    _limiter->set_knee_db(1.);
+    _limiter->set_threshold_db(-2);
+    _limiter->set_attack_ms(5.);
+    _limiter->set_release_ms(50.);
 }
 
 Mixer::~Mixer()
@@ -211,6 +218,11 @@ bool Mixer::stem_soloed(uint32_t stem_id) const
     return _stems.stem_soloed(stem_id);
 }
 
+double Mixer::limiter_reduction_db() const
+{
+    return _limiter->reduction_db();
+}
+
 void Mixer::thread_main()
 {
     int last_underflows = _buffer->underflow_count();
@@ -283,6 +295,8 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
 
     _master_level->process(chunk);
     _metronome->render(chunk);
+    _limiter->apply(chunk);
+
     _playback_position.compare_exchange_strong(
         original_position, position, std::memory_order::relaxed);
 
