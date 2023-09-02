@@ -1,6 +1,7 @@
 #include <audio-buffer.h>
 
 #include <cassert>
+#include <cstdio>
 #include <thread>
 
 
@@ -63,6 +64,8 @@ AudioBuffer& AudioBuffer::operator<<(const audio_chunk& source)
     if (previous_reset_counter == _reset_counter) {
         memcpy(&_chunk_array[current_write_idx], &source, sizeof(audio_chunk));
         _write_idx.compare_exchange_strong(current_write_idx, next_cell);
+    } else {
+        printf("[AudioBuffer] Omitting a single write to the circular buffer - reset detected!\n");
     }
 
     return *this;

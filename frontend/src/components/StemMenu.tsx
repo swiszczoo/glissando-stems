@@ -129,6 +129,7 @@ function StemMenu(props: StemMenuProps) {
   const [ editModalOpen, setEditModalOpen ] = useState(false);
   const [ modalKey, setModalKey ] = useState(0);
   const queryClient = useQueryClient();
+  const session = useSession();
 
   const handleEditClick = () => {
     setEditModalOpen(true);
@@ -169,7 +170,7 @@ function StemMenu(props: StemMenuProps) {
           <MenuFrame role='menu'>
             <MenuItem onClick={handleEditClick}><SettingsRoundedIcon />&nbsp;Edytuj ścieżkę</MenuItem>
             <MenuItem>
-              <a onClick={props.onBlur} href={props.stemData.losslessPath} download={props.downloadFilename}>
+              <a onClick={props.onBlur} href={`${session.stemLocationPrefix}/${props.stemData.losslessPath}`} download={props.downloadFilename}>
                 <DownloadRoundedIcon />&nbsp;Pobierz
               </a>
             </MenuItem>
