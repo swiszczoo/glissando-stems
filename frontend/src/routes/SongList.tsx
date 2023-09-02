@@ -255,7 +255,7 @@ function DeleteSongModal(props: ModalProps & { songId: number, songTitle: string
         }
       } else {
         console.error(error);
-        alert('Nie można dodać utworu! Wystąpił nieznany błąd.');
+        alert('Nie można usunąć utworu! Wystąpił nieznany błąd.');
       }
     });
   };

@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThan, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Repository } from 'typeorm';
 import * as nanoid from 'nanoid';
 
 import { ExecFileException, execFile } from 'child_process';
@@ -26,13 +26,19 @@ interface CreateStemParams {
 const NANOID_SIZE = 70;
 
 @Injectable()
-export class StemService {
+export class StemService implements OnModuleInit {
   private readonly logger = new Logger(StemService.name);
 
   constructor(
     @InjectRepository(Stem) private stemRepository: Repository<Stem>,
     private configService: ConfigService<Config>,
   ) {}
+
+  async onModuleInit() {
+    this.logger.log('Cleaning up stem service on startup');
+    await this.removeOldFailedStems();
+    await this.removeOldDeletedAndOrphanedStemFiles();
+  }
 
   private runStemConversion(
     stem: Stem,
@@ -53,16 +59,16 @@ export class StemService {
       });
 
       await this.stemRepository.update(stem.id, {
-        processingHostname: undefined,
-        processingPid: undefined,
+        processingHostname: null,
+        processingPid: null,
         status: StemStatus.FAILED,
       });
     };
 
     const handleSuccess = async (sampleCount: number) => {
       await this.stemRepository.update(stem.id, {
-        processingHostname: undefined,
-        processingPid: undefined,
+        processingHostname: null,
+        processingPid: null,
         status: StemStatus.READY,
         location: `${stemName}.oga`,
         hqLocation: `${stemName}.flac`,
@@ -124,7 +130,49 @@ export class StemService {
     return newStem;
   }
 
+  async updateStemForSong(
+    song: Song,
+    id: number,
+    newStemInfo: Partial<CreateStemParams>,
+  ): Promise<Stem | undefined> {
+    await this.stemRepository.update(
+      {
+        id: id,
+        songId: song.id,
+        status: StemStatus.READY,
+      },
+      {
+        name: newStemInfo.name,
+        instrument: newStemInfo.instrument,
+        offset: newStemInfo.offset,
+        gainDecibels: newStemInfo.gainDecibels,
+        pan: newStemInfo.pan,
+      },
+    );
+
+    return (await this.stemRepository.findOneBy({ id: id })) || undefined;
+  }
+
+  async deleteStemForSong(song: Song, id: number): Promise<number> {
+    const result = await this.stemRepository.update(
+      {
+        id: id,
+        songId: song.id,
+        status: StemStatus.READY,
+      },
+      {
+        status: StemStatus.DELETED,
+      },
+    );
+
+    return result.affected;
+  }
+
+  //
+  //
   // Cron tasks
+  //
+  //
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async removeOldFailedStems() {
@@ -137,15 +185,20 @@ export class StemService {
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_NOON)
-  async removeOldDeletedStemFiles() {
-    const stems = await this.stemRepository.findBy({
-      local: true,
-      status: StemStatus.DELETED,
-    });
+  async removeOldDeletedAndOrphanedStemFiles() {
+    const stems = await this.stemRepository.findBy([
+      {
+        local: true,
+        status: StemStatus.DELETED,
+      },
+      {
+        songId: IsNull(),
+      },
+    ]);
 
     const rmfile = promisify(rm);
 
-    stems.forEach(async (stem) => {
+    for (const stem of stems) {
       const normalPath = `${this.configService.get('STEM_SAVE_FOLDER')}/${
         stem.location
       }`;
@@ -153,16 +206,23 @@ export class StemService {
         stem.hqLocation
       }`;
 
-      rmfile(normalPath).catch(() =>
-        this.logger.warn(`Could not remove stem data file at ${normalPath}`),
-      );
-      rmfile(hqPath).catch(() =>
-        this.logger.warn(`Could not remove stem data file at ${hqPath}`),
-      );
-    });
+      try {
+        await rmfile(normalPath);
+      } catch {
+        this.logger.warn(`Could not remove stem data file at ${normalPath}`);
+      }
 
-    await this.stemRepository.delete({
-      id: In(stems.map((stem) => stem.id)),
-    });
+      try {
+        await rmfile(hqPath);
+      } catch {
+        this.logger.warn(`Could not remove stem data file at ${hqPath}`);
+      }
+    }
+
+    if (stems.length > 0) {
+      await this.stemRepository.delete({
+        id: In(stems.map((stem) => stem.id)),
+      });
+    }
   }
 }

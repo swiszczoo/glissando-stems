@@ -238,6 +238,7 @@ void StemManager::update_or_add_stems(const std::vector<stem_info>& info)
                 prev_ordinal = ++stem_ptr->waveform_ordinal;
             }
 
+            _complete_cb();
             run_waveform_processing(stem_ptr, prev_ordinal);
         }
     }
@@ -393,7 +394,8 @@ void StemManager::process_stem_waveform(StemEntryPtr stem, uint32_t prev_ordinal
             stem->waveform_base64 = std::move(data_uri);
             ++stem->waveform_ordinal;
         } else {
-            printf("Stem %u: Waveform not saved due to being obsolete!\n", stem->info.id);
+            printf("Stem %u: Waveform not saved due to being obsolete (%u != %u)!\n", 
+                stem->info.id, stem->waveform_ordinal.load(), prev_ordinal);
         }
     }
 }

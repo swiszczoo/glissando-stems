@@ -22,7 +22,9 @@ export class Song {
   public slug: string;
 
   @Index()
-  @ManyToOne(() => Band, (band) => band.id)
+  @ManyToOne(() => Band, (band) => band.id, {
+    onDelete: 'CASCADE',
+  })
   public owner: Band;
 
   @Column('varchar', { nullable: false, length: 255 })

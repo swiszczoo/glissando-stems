@@ -28,7 +28,11 @@ export class SongService {
   async getAllSongsByBand(bandId: number): Promise<Song[]> {
     const songs = await this.songRepository
       .createQueryBuilder('song')
-      .leftJoin('stem', 'stem', 'song.id = stem.songId')
+      .leftJoin(
+        'stem',
+        'stem',
+        `song.id = stem.songId AND stem.status = "${StemStatus.READY}"`,
+      )
       .addSelect('COUNT(stem.id)', 'stemCount')
       .addSelect('COALESCE(MAX(stem.samples + stem.offset), 0) AS samples')
       .where('song.ownerId = :id', { id: bandId })
@@ -44,7 +48,11 @@ export class SongService {
   ): Promise<Song | undefined> {
     const songs = await this.songRepository
       .createQueryBuilder('song')
-      .leftJoin('stem', 'stem', 'song.id = stem.songId')
+      .leftJoin(
+        'stem',
+        'stem',
+        `song.id = stem.songId AND stem.status = "${StemStatus.READY}"`,
+      )
       .addSelect('COUNT(stem.id)', 'stemCount')
       .addSelect('COALESCE(MAX(stem.samples + stem.offset), 0) AS samples')
       .where('song.ownerId = :bandId AND song.id = :songId', { bandId, songId })
@@ -64,7 +72,11 @@ export class SongService {
   ): Promise<Song | undefined> {
     const songs = await this.songRepository
       .createQueryBuilder('song')
-      .leftJoin('stem', 'stem', 'song.id = stem.songId')
+      .leftJoin(
+        'stem',
+        'stem',
+        `song.id = stem.songId AND stem.status = "${StemStatus.READY}"`,
+      )
       .addSelect('COUNT(stem.id)', 'stemCount')
       .addSelect('COALESCE(MAX(stem.samples + stem.offset), 0) AS samples')
       .where('song.ownerId = :bandId AND song.slug = :slug', { bandId, slug })

@@ -98,11 +98,8 @@ const WaveformLoader = styled('div')(({ theme }) => ({
 
 interface EditorTrackProps {
   songName: string;
-  stemId: number;
   stemOrdinal: number;
-  instrument: string;
-  name: string;
-  losslessStemUrl: string;
+  stemData: StemData;
   contextMenuOpen?: boolean;
   onClick?: () => void;
   onContextMenuBlur?: () => void;
@@ -111,12 +108,12 @@ interface EditorTrackProps {
 function EditorTrack(props: EditorTrackProps) {
   const [ native, ] = useNative();
   const trackTileRef = useRef<HTMLDivElement>(null);
-  const waveformOrdinal = native!.getWaveformOrdinal(props.stemId);
+  const waveformOrdinal = native!.getWaveformOrdinal(props.stemData.id);
 
   const waveformDataUri = useMemo(() => {
     waveformOrdinal;
-    return native!.getWaveformDataUri(props.stemId)
-  }, [native, waveformOrdinal, props.stemId]);
+    return native!.getWaveformDataUri(props.stemData.id)
+  }, [native, waveformOrdinal, props.stemData.id]);
 
   const waveformView = useMemo(() => {
     if (waveformDataUri.length > 0) return <WaveformView draggable={false} src={waveformDataUri} />;
@@ -124,42 +121,43 @@ function EditorTrack(props: EditorTrackProps) {
   }, [waveformDataUri]);
 
   const handleMute = useCallback(() => {
-    native!.toggleMute(props.stemId);
-  }, [native, props.stemId]);
+    native!.toggleMute(props.stemData.id);
+  }, [native, props.stemData.id]);
 
   const handleSolo = useCallback(() => {
-    native!.toggleSolo(props.stemId);
-  }, [native, props.stemId]);
+    native!.toggleSolo(props.stemData.id);
+  }, [native, props.stemData.id]);
 
   return (
     <TrackContainer>
       <TrackTile 
         className={props.contextMenuOpen ? 'active' : ''}
         onClick={props.onClick} 
+        tabIndex={0}
         ref={trackTileRef} 
-        instrument={props.instrument} 
+        instrument={props.stemData.instrument} 
         icon 
-        title={props.name}>
+        title={props.stemData.name}>
 
-        <TrackLabel>{props.name}</TrackLabel>
+        <TrackLabel>{props.stemData.name}</TrackLabel>
       </TrackTile>
       <span style={{ width: 8 }} />
       <MuteSolo 
-        mute={native!.isStemMuted(props.stemId)} 
-        solo={native!.isStemSoloed(props.stemId)}
+        mute={native!.isStemMuted(props.stemData.id)} 
+        solo={native!.isStemSoloed(props.stemData.id)}
         onMute={handleMute}
         onSolo={handleSolo}
         />
       <span style={{ width: 8 }}/>
-      <WaveformTile instrument={props.instrument}>
+      <WaveformTile instrument={props.stemData.instrument}>
         { waveformView }
       </WaveformTile>
       <StemMenu 
         anchorEl={trackTileRef.current} 
         open={props.contextMenuOpen} 
         onBlur={props.onContextMenuBlur}
-        losslessStemUrl={props.losslessStemUrl}
-        downloadFilename={`${props.name} - [${props.songName}].flac`}/>
+        stemData={props.stemData}
+        downloadFilename={`${props.stemData.name} - [${props.songName}].flac`}/>
     </TrackContainer>
   );
 }
@@ -233,12 +231,9 @@ function EditorTracks(props: EditorTracksProps) {
           sortedStems.map((stem: StemData, index: number) => (
             <EditorTrack 
               key={stem.id} 
-              stemId={stem.id}
               stemOrdinal={index}
-              instrument={stem.instrument} 
-              name={stem.name}
-              losslessStemUrl={stemLocationPrefix! + '/' + stem.losslessPath}
               songName={props.songName}
+              stemData={stem}
               contextMenuOpen={contextMenuStemId === stem.id}
               onClick={handleTrackClick.bind(null, stem.id)}
               onContextMenuBlur={handleTrackCtxMenuBlur} />

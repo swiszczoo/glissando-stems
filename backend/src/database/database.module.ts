@@ -15,7 +15,7 @@ export class DatabaseModule {
   static forRootAsync(): DynamicModule {
     return TypeOrmModule.forRootAsync({
       useFactory: async (configService: ConfigService<Config>) => ({
-        type: 'mysql',
+        type: 'mariadb',
         host: configService.get('DATABASE_HOST'),
         port: configService.get('DATABASE_PORT'),
         username: configService.get('DATABASE_USER'),

@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Session,
   UploadedFiles,
@@ -13,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
+import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 
 import { SessionData } from '../session';
@@ -29,7 +31,7 @@ import { SongResponseDto } from './dto/song-response.dto';
 import { StemFailedResponseDto } from './dto/stem-failed-response.dto';
 import { StemProcessingResponseDto } from './dto/stem-processing-response.dto';
 import { StemReadyResponseDto } from './dto/stem-ready-response.dto';
-import { StemRequestDto } from './dto/stem-request.dto';
+import { PatchStemRequestDto, StemRequestDto } from './dto/stem-request.dto';
 
 import { StemStatus } from './entities/stem.entity';
 
@@ -239,7 +241,7 @@ export class SongController {
 
     let parsedBody: StemRequestDto = null;
     try {
-      parsedBody = JSON.parse(body.data);
+      parsedBody = plainToInstance(StemRequestDto, JSON.parse(body.data));
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -251,6 +253,36 @@ export class SongController {
     }
 
     return parsedBody;
+  }
+
+  @Post(':id/stems')
+  @Roles(Role.User, Role.Admin)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'data', maxCount: 1 },
+      { name: 'stem', maxCount: 1 },
+    ]),
+  )
+  async createStem(
+    @Session() session: SessionData,
+    @Param('id', ParseIntPipe) songId: number,
+    @Body() body: { data?: string },
+    @UploadedFiles() files: { stem?: Express.Multer.File[] },
+  ): Promise<StemProcessingResponseDto> {
+    const parsedBody = await this.validateCreateStemRequest(body, files);
+
+    const song = await this.service.getSongByBand(session.bandId, songId);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    return StemProcessingResponseDto.entityToDto(
+      await this.stemService.uploadStemForSong(
+        song,
+        parsedBody,
+        files.stem[0].path,
+      ),
+    );
   }
 
   @Post('by-slug/:slug/stems')
@@ -281,5 +313,82 @@ export class SongController {
         files.stem[0].path,
       ),
     );
+  }
+
+  @Patch(':id/stems/:stemId')
+  @Roles(Role.User, Role.Admin)
+  async updateStem(
+    @Session() session: SessionData,
+    @Param('id', ParseIntPipe) songId: number,
+    @Param('stemId', ParseIntPipe) stemId: number,
+    @Body() params: PatchStemRequestDto,
+  ): Promise<StemReadyResponseDto> {
+    const song = await this.service.getSongByBand(session.bandId, songId);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const stem = await this.stemService.updateStemForSong(song, stemId, params);
+    if (!stem) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    return StemReadyResponseDto.entityToDto(stem);
+  }
+
+  @Patch('by-slug/:slug/stems/:stemId')
+  @Roles(Role.User, Role.Admin)
+  async updateStemBySlug(
+    @Session() session: SessionData,
+    @Param('slug') slug: string,
+    @Param('stemId', ParseIntPipe) stemId: number,
+    @Body() params: PatchStemRequestDto,
+  ): Promise<StemReadyResponseDto> {
+    const song = await this.service.getSongByBandBySlug(session.bandId, slug);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const stem = await this.stemService.updateStemForSong(song, stemId, params);
+    if (!stem) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    return StemReadyResponseDto.entityToDto(stem);
+  }
+  @Delete(':id/stems/:stemId')
+  @Roles(Role.User, Role.Admin)
+  async deleteStem(
+    @Session() session: SessionData,
+    @Param('id', ParseIntPipe) songId: number,
+    @Param('stemId', ParseIntPipe) stemId: number,
+  ): Promise<void> {
+    const song = await this.service.getSongByBand(session.bandId, songId);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const count = await this.stemService.deleteStemForSong(song, stemId);
+    if (!count) {
+      throw this.exceptions.NOT_FOUND;
+    }
+  }
+
+  @Delete('by-slug/:slug/stems/:stemId')
+  @Roles(Role.User, Role.Admin)
+  async deleteStemBySlug(
+    @Session() session: SessionData,
+    @Param('slug') slug: string,
+    @Param('stemId', ParseIntPipe) stemId: number,
+  ): Promise<void> {
+    const song = await this.service.getSongByBandBySlug(session.bandId, slug);
+    if (!song) {
+      throw this.exceptions.NOT_FOUND;
+    }
+
+    const count = await this.stemService.deleteStemForSong(song, stemId);
+    if (!count) {
+      throw this.exceptions.NOT_FOUND;
+    }
   }
 }

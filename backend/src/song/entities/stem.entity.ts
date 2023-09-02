@@ -22,7 +22,7 @@ export class Stem {
   public id: number;
 
   @ManyToOne(() => Song, (song) => song.stems, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   public song: Song;
 

@@ -7,6 +7,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class StemRequestDto {
   @IsString()
@@ -34,3 +35,5 @@ export class StemRequestDto {
   @Max(1)
   pan: number;
 }
+
+export class PatchStemRequestDto extends PartialType(StemRequestDto) {}
