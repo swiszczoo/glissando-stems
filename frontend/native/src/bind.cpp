@@ -1,5 +1,6 @@
 #include <mixer.h>
 #include <stem-manager.h>
+#include <tempo.h>
 
 #include <emscripten/bind.h>
 
@@ -18,6 +19,7 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("resetPlayback", &Mixer::reset_playback)
         .function("setPlaybackPosition", &Mixer::set_playback_position)
         .function("getPlaybackPosition", &Mixer::playback_position)
+        .function("getPlaybackPositionBst", &Mixer::playback_position_bst)
         .function("getSampleRate", &Mixer::sample_rate)
         .function("setMetronomeEnabled", &Mixer::set_metronome_enabled)
         .function("toggleMetronome", &Mixer::toggle_metronome)
@@ -49,4 +51,15 @@ EMSCRIPTEN_BINDINGS(editor) {
         .field("pan", &stem_info::pan)
         ;
     register_vector<stem_info>("VectorStemInfo");
+    value_object<tempo_tag>("TempoTag")
+        .field("sample", &tempo_tag::sample)
+        .field("bar", &tempo_tag::bar)
+        .field("timeSignatureNumerator", &tempo_tag::time_signature_numerator)
+        ;
+    value_object<song_position>("SongPosition")
+        .field("bar", &song_position::bar)
+        .field("step", &song_position::step)
+        .field("tick", &song_position::tick)
+        ;
+    register_vector<tempo_tag>("VectorTempoTag");
 }

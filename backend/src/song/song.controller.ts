@@ -48,6 +48,32 @@ export class SongController {
     private stemService: StemService,
   ) {}
 
+  private validateForm(dto: SongCreateDto): void {
+    if (dto.form.length === 0) return;
+
+    let previous = dto.form[0].bar;
+    for (const formElement of dto.form) {
+      if (formElement.bar < previous) {
+        throw this.exceptions.FORM_NOT_ASCENDING;
+      }
+
+      previous = formElement.bar;
+    }
+  }
+
+  private validateTempo(dto: SongCreateDto): void {
+    if (!dto.varyingTempo || dto.varyingTempo.length === 0) return;
+
+    let previous = dto.varyingTempo[0].sample;
+    for (const tempoElement of dto.varyingTempo) {
+      if (tempoElement.sample < previous) {
+        throw this.exceptions.TEMPO_NOT_ASCENDING;
+      }
+
+      previous = tempoElement.sample;
+    }
+  }
+
   @Get()
   @Roles(Role.User, Role.Admin)
   async findAll(@Session() session: SessionData): Promise<SongResponseDto[]> {
@@ -103,6 +129,9 @@ export class SongController {
     @Session() session: SessionData,
     @Body() params: SongCreateDto,
   ): Promise<SongResponseDto> {
+    this.validateForm(params);
+    this.validateTempo(params);
+
     const song = await this.service.createSongByBand(session.bandId, params);
 
     return SongResponseDto.entityToDto(

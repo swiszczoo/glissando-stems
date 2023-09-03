@@ -1,6 +1,7 @@
 #pragma once
 #include <spin-lock.h>
 #include <stem-manager.h>
+#include <tempo.h>
 
 #include <memory>
 #include <thread>
@@ -33,6 +34,7 @@ public:
     std::string playback_state() const;
     void reset_playback();
     uint32_t playback_position() const;
+    song_position playback_position_bst() const;
     bool set_playback_position(uint32_t new_position);
 
     int sample_rate() const;
@@ -66,9 +68,9 @@ public:
 
 private:
     enum class PlaybackState {
-      PLAYING,
-      PAUSED,
-      STOPPED,
+        PLAYING,
+        PAUSED,
+        STOPPED,
     };
 
     std::thread _thread;
@@ -79,11 +81,11 @@ private:
     uint32_t _last_playback_position;
     std::atomic<uint32_t> _length;
 
+    std::unique_ptr<Tempo> _tempo;
     std::unique_ptr<PeakMeter> _master_level;
     std::unique_ptr<Metronome> _metronome;
     std::atomic_bool _metronome_enabled;
     std::atomic<double> _metronome_gain_db;
-    std::atomic<double> _bpm;
     
     std::unique_ptr<Limiter> _limiter;
 

@@ -108,7 +108,11 @@ function Song(props: SongProps) {
         <span>{time}</span>
         <span></span>
         <HourglassTopRoundedIcon titleAccess='Tempo' />
-        <span>{props.bpm.toFixed(3)} BPM</span>
+        {
+          typeof props.bpm === 'number'
+          ? <span>{props.bpm.toFixed(3)} BPM</span>
+          : <span title='Tempo utworu zmienia się w czasie'>???</span>
+        }
       </SongDetails>
       <SongActions>
         <GreenButton onClick={props.onPlay} disabled={props.stemCount < 1}>

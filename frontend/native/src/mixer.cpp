@@ -20,11 +20,11 @@ Mixer::Mixer(std::shared_ptr<AudioBuffer> out_buffer)
     , _playback_position(0)
     , _last_playback_position(0)
     , _length(0)
+    , _tempo(std::make_unique<Tempo>())
     , _master_level(std::make_unique<PeakMeter>())
-    , _metronome(std::make_unique<Metronome>())
+    , _metronome(std::make_unique<Metronome>(*_tempo))
     , _metronome_enabled(false)
     , _metronome_gain_db(1.0)
-    , _bpm(120.0)
     , _limiter(std::make_unique<Limiter>())
 {
     _stems.set_bg_task_complete_callback(
@@ -92,6 +92,11 @@ uint32_t Mixer::playback_position() const
     return _playback_position.load(std::memory_order_relaxed);
 }
 
+song_position Mixer::playback_position_bst() const
+{
+    return _tempo->current_position(playback_position());
+}
+
 bool Mixer::set_playback_position(uint32_t new_position)
 {
     if (_state != PlaybackState::STOPPED) {
@@ -141,15 +146,13 @@ double Mixer::metronome_gain_db() const
 
 void Mixer::set_track_bpm(double bpm)
 {
-    if (bpm != _bpm) {
-        _bpm = bpm;
-        invalidate_state();
-    }
+    _tempo->set_stable_bpm(bpm, 4);
+    invalidate_state();
 }
 
 double Mixer::track_bpm() const
 {
-    return _bpm;
+    return _tempo->current_bpm(_playback_position);
 }
 
 double Mixer::left_channel_out_db() const
@@ -270,7 +273,6 @@ void Mixer::perform_mixdown(audio_chunk& chunk)
         _stems.render(position, chunk);
         
         if (_metronome_enabled) {
-            _metronome->set_bpm(_bpm);
             _metronome->set_gain(Utils::decibels_to_gain(_metronome_gain_db));
             _metronome->process(position);
         }

@@ -3,13 +3,11 @@
 
 // Forward declarations
 struct audio_chunk;
+class Tempo;
 
 class Metronome {
 public:
-    Metronome();
-
-    void set_bpm(double bpm);
-    double bpm() const;
+    Metronome(const Tempo& tempo);
 
     void set_gain(double gain);
     double gain() const;
@@ -24,12 +22,9 @@ private:
     static const int SOUND_BEAT_SAMPLES;
     static const int TICK_OFFSET;
 
-    double _bpm;
-    double _samples_per_beat;
+    const Tempo& _tempo;
     double _gain;
     const int16_t* _current_sample;
     int _current_sample_length;
     int _sample_position;
-
-    static double samples_per_beat_from_bpm(double bpm);
 };

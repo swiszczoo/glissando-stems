@@ -15,6 +15,8 @@ import BtnNextIcon from '../assets/btn-next.svg';
 import BtnTickIcon from '../assets/btn-tick.svg';
 
 import { useNative } from '../hooks/useNative';
+import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
+import { useCallback, useState } from 'react';
 
 interface FieldWithIconProps {
   iconSrc: string;
@@ -110,12 +112,16 @@ const RedIcon = styled('img')(() => ({
 
 interface EditorNavbarProps {
   songTitle: string;
-  songBpm: number;
 }
 
 function EditorNavbar(props: EditorNavbarProps) {
   const [ native, ] = useNative();
   const state = native!.getPlaybackState();
+  const [ bpm, setBpm ] = useState('000.000');
+
+  usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
+    setBpm(mixer.getTrackBpm().toFixed(3).padStart(7, '0'));
+  }, []));
 
   const handlePlay = () => {
     if (state === 'play')
@@ -174,7 +180,7 @@ function EditorNavbar(props: EditorNavbarProps) {
       </FieldWithIcon>
       <span style={{ width: 32 }} />
       <FieldWithIcon iconSrc={BpmIcon} width={4.5} title='Tempo'>
-        <span>{ props.songBpm.toFixed(3) }</span>
+        { bpm }
       </FieldWithIcon>
       <span style={{ width: 32 }} />
     </Navbar>

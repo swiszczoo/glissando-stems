@@ -1,6 +1,8 @@
 import {
+  ArrayMinSize,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   Max,
   MaxLength,
@@ -9,6 +11,7 @@ import {
 } from 'class-validator';
 
 import { FormEntityDto } from './form-entity.dto';
+import { VaryingTempoEntityDto } from './varying-tempo-entity.dto';
 
 export class SongCreateDto {
   @IsNotEmpty()
@@ -23,4 +26,9 @@ export class SongCreateDto {
 
   @ValidateNested()
   public form: FormEntityDto[];
+
+  @IsOptional()
+  @ValidateNested()
+  @ArrayMinSize(2)
+  public varyingTempo?: VaryingTempoEntityDto[];
 }

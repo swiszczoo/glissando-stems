@@ -15,4 +15,10 @@ export class SongExceptions {
   public DATA_NOT_FOUND = new BadRequestException(
     'This multipart request should also contain a data parameter',
   );
+  public FORM_NOT_ASCENDING = new BadRequestException(
+    'Form array must be sorted by bars in ascending order',
+  );
+  public TEMPO_NOT_ASCENDING = new BadRequestException(
+    'Varying tempo array must be sorted by sample numbers in ascending order',
+  );
 }

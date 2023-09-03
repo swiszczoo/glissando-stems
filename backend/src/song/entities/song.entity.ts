@@ -30,11 +30,14 @@ export class Song {
   @Column('varchar', { nullable: false, length: 255 })
   public title: string;
 
-  @Column('float', { nullable: false })
+  @Column('float', { nullable: true })
   public bpm: number;
 
   @Column('simple-json', { nullable: false })
   public form: { bar: number; name: string }[];
+
+  @Column('simple-json', { nullable: true })
+  public varyingTempo: { sample: number; bar: number; timeSigNum: number }[];
 
   @OneToMany(() => Stem, (stem) => stem.song)
   public stems: Stem[];

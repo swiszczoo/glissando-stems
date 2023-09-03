@@ -16,6 +16,12 @@ interface StemInfo {
   pan: number;
 }
 
+interface SongPosition {
+  bar: number;
+  step: number;
+  tick: number;
+}
+
 interface NativeMixer {
   testJsBinding: () => number;
   play: () => void;
@@ -25,6 +31,7 @@ interface NativeMixer {
   resetPlayback: () => void;
   setPlaybackPosition: (sampleNum: number) => void;
   getPlaybackPosition: () => number;
+  getPlaybackPositionBst: () => SongPosition;
   getSampleRate: () => number;
   setMetronomeEnabled: (enabled: boolean) => void;
   toggleMetronome: () => void;
@@ -49,3 +56,4 @@ interface NativeMixer {
 }
 
 type FormType = { bar: number; name: string; }[];
+type TempoType = { sample: number; bar: number; timeSigNum: number }[];

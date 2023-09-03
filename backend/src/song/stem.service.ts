@@ -197,6 +197,7 @@ export class StemService implements OnModuleInit {
     ]);
 
     const rmfile = promisify(rm);
+    let removedCount = 0;
 
     for (const stem of stems) {
       const normalPath = `${this.configService.get('STEM_SAVE_FOLDER')}/${
@@ -208,16 +209,22 @@ export class StemService implements OnModuleInit {
 
       try {
         await rmfile(normalPath);
+        ++removedCount;
       } catch {
         this.logger.warn(`Could not remove stem data file at ${normalPath}`);
       }
 
       try {
         await rmfile(hqPath);
+        ++removedCount;
       } catch {
         this.logger.warn(`Could not remove stem data file at ${hqPath}`);
       }
     }
+
+    this.logger.log(
+      `Storage cleanup - removed ${removedCount} stem files in total.`,
+    );
 
     if (stems.length > 0) {
       await this.stemRepository.delete({

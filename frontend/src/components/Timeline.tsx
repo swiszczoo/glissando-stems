@@ -36,8 +36,9 @@ const PrimaryBar = styled('div')(({ theme }) => ({
   pointerEvents: 'none',
   userSelect: 'none',
   zIndex: 1,
+  letterSpacing: -1,
   '&.plus100': {
-    letterSpacing: -1,
+    letterSpacing: -1.5,
   },
   '&:before': {
     content: '""',

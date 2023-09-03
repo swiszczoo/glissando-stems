@@ -1,31 +1,18 @@
 #include <metronome.h>
 
 #include <audio-buffer.h>
+#include <tempo.h>
 
 
 const int Metronome::TICK_OFFSET = 128;
 
-Metronome::Metronome()
-    : _bpm(120.0)
+Metronome::Metronome(const Tempo& tempo)
+    : _tempo(tempo)
     , _gain(1.0)
     , _current_sample(reinterpret_cast<const int16_t*>(SOUND_BAR))
     , _current_sample_length(SOUND_BAR_SAMPLES)
     , _sample_position(SOUND_BAR_SAMPLES)
 {
-    _samples_per_beat = Metronome::samples_per_beat_from_bpm(_bpm);
-}
-
-void Metronome::set_bpm(double new_bpm)
-{
-    if (new_bpm > 0.0) {
-        _bpm = new_bpm;
-        _samples_per_beat = Metronome::samples_per_beat_from_bpm(new_bpm);
-    }
-}
-
-double Metronome::bpm() const
-{
-    return _bpm;
 }
 
 void Metronome::set_gain(double new_gain)
@@ -40,14 +27,17 @@ double Metronome::gain() const
 
 void Metronome::process(uint32_t first_sample)
 {
-    uint32_t prev_tick_id = floor((first_sample + TICK_OFFSET - 1) / _samples_per_beat);
+    auto prev_position = _tempo.current_position(first_sample + TICK_OFFSET - 1);
+
     for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
         uint32_t sample = first_sample + i + TICK_OFFSET;
-        uint32_t next_tick_id = floor(sample / _samples_per_beat);
+        auto next_position = _tempo.current_position(sample);
+        next_position.tick = prev_position.tick;
 
-        if (prev_tick_id + 1 == next_tick_id || sample == TICK_OFFSET) {
+        if (prev_position != next_position || sample == TICK_OFFSET) {
             // Metronome should tick right now
-            if (next_tick_id % 4 == 0) {
+
+            if (next_position.step == 1) {
                 // Bar tick
                 _current_sample = reinterpret_cast<const int16_t*>(SOUND_BAR);
                 _current_sample_length = SOUND_BAR_SAMPLES;
@@ -56,10 +46,11 @@ void Metronome::process(uint32_t first_sample)
                 _current_sample = reinterpret_cast<const int16_t*>(SOUND_BEAT);
                 _current_sample_length = SOUND_BEAT_SAMPLES;
             }
+
             _sample_position = 0;
         }
 
-        prev_tick_id = next_tick_id;
+        prev_position = next_position;
     }
 }
 
@@ -74,7 +65,3 @@ void Metronome::render(audio_chunk& chunk)
     }
 }
 
-double Metronome::samples_per_beat_from_bpm(double bpm)
-{
-    return AUDIO_SAMPLE_RATE * 60 / bpm;
-}

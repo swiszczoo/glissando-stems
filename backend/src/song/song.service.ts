@@ -13,6 +13,7 @@ interface CreateSongParams {
   bpm: number;
   title: string;
   form: { bar: number; name: string }[];
+  varyingTempo?: { sample: number; bar: number; timeSigNum: number }[];
 }
 
 const NANOID_SIZE = 60;
@@ -98,12 +99,13 @@ export class SongService {
       bpm: params.bpm,
       form: params.form,
       owner: { id: bandId },
-      samples: 0,
       slug: nanoid.nanoid(NANOID_SIZE),
       title: params.title,
+      varyingTempo: params.varyingTempo || null,
     });
 
     song.stemCount = 0;
+    song.samples = 0;
     return song;
   }
 

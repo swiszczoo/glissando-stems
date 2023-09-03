@@ -8,7 +8,7 @@ interface Timestamp {
   bstTime: string;
 }
 
-function getTimestamp(sample: number, sampleRate: number, bpm: number): Timestamp {
+function getTimestamp(sample: number, sampleRate: number, bst: SongPosition): Timestamp {
   const timeInSeconds = sample / sampleRate;
 
   const minutes = Math.floor(timeInSeconds / 60).toFixed();
@@ -17,12 +17,7 @@ function getTimestamp(sample: number, sampleRate: number, bpm: number): Timestam
 
   const time = `${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}.${millis.padStart(3, '0')}`;
 
-  const timeInBeats = timeInSeconds / 60 * bpm;
-  const bars = (Math.floor(timeInBeats / 4) + 1).toFixed();
-  const steps = (Math.floor(timeInBeats) % 4 + 1).toFixed();
-  const ticks = (Math.floor(timeInBeats * 4) % 16 + 1).toFixed();
-
-  const bstTime = `${bars.padStart(3, '0')}.${steps}.${ticks.padStart(2, '0')}`;
+  const bstTime = `${`${bst.bar}`.padStart(3, '0')}.${bst.step}.${`${bst.tick}`.padStart(2, '0')}`;
 
   return {
     time,
@@ -38,11 +33,10 @@ function EditorTimer() {
   });
 
   const sampleRate = native?.getSampleRate() || 0;
-  const bpm = native?.getTrackBpm() || 120.0;
 
   usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
-    setTimestamp(getTimestamp(mixer.getPlaybackPosition(), sampleRate, bpm));
-  }, [bpm, sampleRate]));
+    setTimestamp(getTimestamp(mixer.getPlaybackPosition(), sampleRate, mixer.getPlaybackPositionBst()));
+  }, [sampleRate]));
   
   return (
     <>
