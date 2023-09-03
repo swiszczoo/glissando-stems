@@ -27,6 +27,7 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("setMetronomeGainDb", &Mixer::set_metronome_gain_db)
         .function("getMetronomeGainDb", &Mixer::metronome_gain_db)
         .function("setTrackBpm", &Mixer::set_track_bpm)
+        .function("setTrackVaryingBpm", &Mixer::set_track_varying_bpm)
         .function("getTrackBpm", &Mixer::track_bpm)
         .function("getLeftChannelOutDb", &Mixer::left_channel_out_db)
         .function("getRightChannelOutDb", &Mixer::right_channel_out_db)

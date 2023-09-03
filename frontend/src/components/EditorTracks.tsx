@@ -188,6 +188,7 @@ function stemDataToStemInfo(pathPrefix: string, data: StemData): StemInfo {
 interface EditorTracksProps {
   songName: string;
   form: FormType;
+  tempo?: TempoType;
   data: StemData[];
 }
 
@@ -225,7 +226,7 @@ function EditorTracks(props: EditorTracksProps) {
 
   return (
     <EditorTracksContainer>
-      <Timeline form={props.form}/>
+      <Timeline form={props.form} tempo={props.tempo}/>
       <EditorTracksScrollable>
         {
           sortedStems.map((stem: StemData, index: number) => (

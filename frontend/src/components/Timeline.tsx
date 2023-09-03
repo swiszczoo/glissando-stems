@@ -116,8 +116,7 @@ function FormMarker(props: FormMarkerProps) {
   )
 }
 
-function calcBarPositionsFromBpm(bpm: number, sampleRate: number, totalSamples: number): number[]
-{
+function calcBarPositionsFromBpm(bpm: number, sampleRate: number, totalSamples: number): number[] {
   const samplesPerBar = sampleRate * 60 / bpm * 4;
   const bars: number[] = [];
   let position = 0;
@@ -130,8 +129,37 @@ function calcBarPositionsFromBpm(bpm: number, sampleRate: number, totalSamples: 
   return bars;
 }
 
+function calcBarPositionsForVaryingBpm(tempo: TempoType, totalSamples: number): number[] {
+  const bars: number[] = [];
+
+  let prev = tempo[0];
+  let lastSamplesPerBar = 0;
+  
+  for (const current of tempo.slice(1)) {
+    const samplesPerBar = (current.sample - prev.sample) / (current.bar - prev.bar);
+    let position = prev.sample
+
+    for (let bar = prev.bar; bar < current.bar; bar++) {
+      bars.push(position);
+      position += samplesPerBar;
+    }
+
+    prev = current;
+    lastSamplesPerBar = samplesPerBar;
+  }
+
+  let position = prev.sample;
+  while (position < totalSamples) {
+    bars.push(Math.round(position));
+    position += lastSamplesPerBar;
+  }
+
+  return bars;
+}
+
 interface TimelineProps {
   form: FormType;
+  tempo?: TempoType;
 }
 
 function Timeline(props: TimelineProps) {
@@ -140,9 +168,13 @@ function Timeline(props: TimelineProps) {
   const sampleRate = native!.getSampleRate();
   const trackLength = native!.getTrackLength();
 
-  const barPositions = useMemo(() => (
-    calcBarPositionsFromBpm(bpm, sampleRate, trackLength)
-  ), [bpm, trackLength, sampleRate]);
+  const barPositions = useMemo(() => {
+    if (!props.tempo) {
+      return calcBarPositionsFromBpm(bpm, sampleRate, trackLength);
+    } else {
+      return calcBarPositionsForVaryingBpm(props.tempo, trackLength);
+    }
+  }, [bpm, trackLength, sampleRate, props.tempo]);
 
   const barLines = useMemo(() => {
     return barPositions.map((position, index) => {

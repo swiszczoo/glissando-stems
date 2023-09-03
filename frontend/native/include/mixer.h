@@ -46,6 +46,7 @@ public:
     double metronome_gain_db() const;
 
     void set_track_bpm(double bpm);
+    void set_track_varying_bpm(const std::vector<tempo_tag>& tags);
     double track_bpm() const;
     double left_channel_out_db() const;
     double right_channel_out_db() const;

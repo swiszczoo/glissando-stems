@@ -39,6 +39,7 @@ interface NativeMixer {
   setMetronomeGainDb: (decibels: number) => void;
   getMetronomeGainDb: () => number;
   setTrackBpm: (bpm: number) => void;
+  setTrackVaryingBpm: (tags: TempoType[]) => void;
   getTrackBpm: () => number;
   getLeftChannelOutDb: () => number;
   getRightChannelOutDb: () => number;

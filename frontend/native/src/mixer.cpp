@@ -150,6 +150,12 @@ void Mixer::set_track_bpm(double bpm)
     invalidate_state();
 }
 
+void Mixer::set_track_varying_bpm(const std::vector<tempo_tag>& tags)
+{
+    _tempo->set_varying_bpm(tags);
+    invalidate_state();
+}
+
 double Mixer::track_bpm() const
 {
     return _tempo->current_bpm(_playback_position);

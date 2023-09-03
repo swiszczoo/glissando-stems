@@ -95,9 +95,22 @@ function EditorContent(props: EditorContentProps) {
   useEffect(() => {
     if (bpm !== null) {
       native!.setTrackBpm(bpm);
+    } else {
+      const vector = new window.Module.VectorTempoTag();
+
+      varyingTempo!.forEach((data) => {
+        vector.push_back({
+          sample: data.sample,
+          bar: data.bar,
+          timeSignatureNumerator: data.timeSigNum,
+        });
+      });
+
+      native!.setTrackVaryingBpm(vector);
+      vector.delete();
     }
     native!.setTrackLength(samples);
-  }, [bpm, native, samples]);
+  }, [bpm, native, samples, varyingTempo]);
 
   useEffect(() => {
     document.title = title + ' \u2013 Glissando Stems';
@@ -107,7 +120,7 @@ function EditorContent(props: EditorContentProps) {
     <>
       <EditorNavbar songTitle={title} />
       <ContentContainer>
-        <EditorTracks songName={title} form={form} data={props.stems}/>
+        <EditorTracks songName={title} form={form} data={props.stems} tempo={props.song.varyingTempo}/>
         <PeakMeter />
         { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
       </ContentContainer>
