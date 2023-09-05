@@ -69,6 +69,7 @@ const FormMarkerBar = styled('div')(({ theme }) => ({
   borderLeft: `3px solid ${theme.palette.primary.main}`,
   userSelect: 'none',
   zIndex: 2,
+  boxShadow: `0 0 5px ${theme.palette.background.main}`,
 }));
 
 const FormMarkerFlag = styled('div')(({ theme }) => ({
@@ -190,7 +191,7 @@ function Timeline(props: TimelineProps) {
       if (barPositions[marker.bar - 1] === undefined) return undefined;
 
       const position = barPositions[marker.bar - 1] / trackLength;
-      return <FormMarker key={marker.name} position={position} name={marker.name} />;
+      return <FormMarker key={`${marker.bar}:${marker.name}`} position={position} name={marker.name} />;
     })
   ), [barPositions, props.form, trackLength]);
 

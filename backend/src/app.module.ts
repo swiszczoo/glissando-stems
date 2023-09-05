@@ -7,6 +7,7 @@ import { SongModule } from './song/song.module';
 import { UserModule } from './user/user.module';
 
 import { DEFAULT_CONFIG } from './config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
@@ -15,6 +16,19 @@ import { DEFAULT_CONFIG } from './config';
     CommonModule,
     SongModule,
     UserModule,
+    ServeStaticModule.forRootAsync({
+      useFactory: () => {
+        if (process.env.NODE_ENV === 'development') {
+          return [
+            {
+              rootPath: './public_dev',
+            },
+          ];
+        }
+
+        return [];
+      },
+    }),
   ],
   controllers: [],
   providers: [],

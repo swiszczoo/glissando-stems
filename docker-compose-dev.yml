@@ -1,0 +1,70 @@
+version: '3.4'
+services:
+  backend-dev:
+    container_name: glissando_backend_dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      FORCE_COLOR: 1
+      NODE_ENV: development
+      TZ: Europe/Warsaw
+    volumes:
+      - "./backend:/usr/src/app:cached"
+      - "/etc/localtime:/etc/localtime:ro"
+    ports:
+      - 3000:3000
+    depends_on:
+      - mariadb
+  
+  frontend-dev:
+    container_name: glissando_frontend_dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    environment:
+      FORCE_COLOR: 1
+      NODE_ENV: development
+    ports:
+      - 5173:5173
+    volumes:
+      - "./frontend:/usr/src/app:cached"
+    depends_on:
+      - backend-dev
+
+  frontend-native-dev:
+    build: 
+      context: ./frontend/native
+      dockerfile: Dockerfile.dev
+    image: glissando_emsdk
+    environment:
+      FORCE_COLOR: 1
+    volumes:
+      - "./frontend/native:/usr/src/app:cached"
+    profiles:
+      - emscripten
+  
+  mariadb:
+    container_name: glissando_mariadb_dev
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+    volumes:
+      - mariadb:/var/lib/mysql
+  
+  phpmyadmin:
+    container_name: glissando_pma_dev
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - 8080:80
+    depends_on:
+      - mariadb
+
+volumes:
+  mariadb:

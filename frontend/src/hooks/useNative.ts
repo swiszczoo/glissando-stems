@@ -14,3 +14,12 @@ export function useNative(): [NativeMixer | undefined, () => void] {
   
   return useMemo(() => [mixer, ctx.invalidateState], [mixer, ctx]);
 }
+
+export function useNativeLazy(): [NativeMixer | undefined, () => void] {
+  const ctx = useContext(WasmContext);
+
+  const module = ctx.module as GlissandoModule;
+  const mixer = useMemo(() => module?.getGlobalMixer(), [module]);
+  
+  return useMemo(() => [mixer, ctx.invalidateState], [mixer, ctx]);
+}

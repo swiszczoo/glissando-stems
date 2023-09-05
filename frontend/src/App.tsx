@@ -13,7 +13,7 @@ import Page from './components/Page';
 import SessionContextProvider from './components/SessionContext';
 import WasmContextProvider from './components/WasmContext';
 
-import { useNative } from './hooks/useNative';
+import { useNativeLazy } from './hooks/useNative';
 
 const theme = createTheme({
   palette: {
@@ -42,7 +42,7 @@ const theme = createTheme({
 
 function AudioContextKiller() {
   const location = useLocation();
-  const [ native, ] = useNative();
+  const [ native, ] = useNativeLazy();
   const pathname = location.pathname;
 
   useEffect(() => {

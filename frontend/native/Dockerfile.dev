@@ -1,0 +1,6 @@
+FROM emscripten/emsdk
+
+RUN apt update && \
+    apt install -y cmake ninja-build
+
+WORKDIR /project

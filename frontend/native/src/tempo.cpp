@@ -194,7 +194,7 @@ song_position Tempo::varying_current_position(uint32_t track_position) const
 
     if (index == 0) {
         return song_position {
-            .bar = 1,
+            .bar = 0,
             .step = 1,
             .tick = 1,
         };
