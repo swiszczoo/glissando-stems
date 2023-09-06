@@ -69,7 +69,7 @@ const FormMarkerBar = styled('div')(({ theme }) => ({
   borderLeft: `3px solid ${theme.palette.primary.main}`,
   userSelect: 'none',
   zIndex: 2,
-  boxShadow: `0 0 5px ${theme.palette.background.main}`,
+  boxShadow: `0 -21px 5px 3px ${theme.palette.background.main}`,
 }));
 
 const FormMarkerFlag = styled('div')(({ theme }) => ({

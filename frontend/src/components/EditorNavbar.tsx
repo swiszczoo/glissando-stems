@@ -112,6 +112,7 @@ const RedIcon = styled('img')(() => ({
 
 interface EditorNavbarProps {
   songTitle: string;
+  form: FormType;
 }
 
 function EditorNavbar(props: EditorNavbarProps) {
@@ -122,6 +123,20 @@ function EditorNavbar(props: EditorNavbarProps) {
   usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
     setBpm(mixer.getTrackBpm().toFixed(3).padStart(7, '0'));
   }, []));
+
+  const handlePrev = () => {
+    if (native!.getPlaybackState() === 'stop') {
+      native!.pause();
+    }
+
+    const position = native!.getPlaybackPositionBst();
+    const maxBar = position.step < 3 ? (position.bar - 1) : position.bar;
+
+    const targetBar = props.form.reduce((prev, current) => current.bar <= maxBar ? current.bar : prev, -1);
+    if (targetBar >= 0) {
+      native!.setPlaybackPosition(native!.getBarSample(targetBar) + 1);
+    }
+  };
 
   const handlePlay = () => {
     if (state === 'play')
@@ -147,6 +162,20 @@ function EditorNavbar(props: EditorNavbarProps) {
     setTimeout(() => window.audioContext?.suspend(), 100);
   }
 
+  const handleNext = () => {
+    if (native!.getPlaybackState() === 'stop') {
+      native!.pause();
+    }
+
+    const position = native!.getPlaybackPositionBst();
+    const minBar = position.bar + 1;
+
+    const targetBar = props.form.reduceRight((prev, current) => current.bar >= minBar ? current.bar : prev, -1);
+    if (targetBar >= 0) {
+      native!.setPlaybackPosition(native!.getBarSample(targetBar) + 1);
+    }
+  };
+
   const handleToggleMetronome = () => {
     native!.toggleMetronome();
   }
@@ -155,7 +184,7 @@ function EditorNavbar(props: EditorNavbarProps) {
     <Navbar title={props.songTitle} customSeparator={true}>
       <NavbarSeparator />
       <PlaybackControlsContainer>
-        <NormalButton title='Poprzednia sekcja'>
+        <NormalButton title='Poprzednia sekcja' onClick={handlePrev}>
           <NormalIcon src={BtnPrevIcon} />
         </NormalButton>
         <GreenButton title='Odtwarzaj' className={ state === 'play' ? 'active' : '' } onClick={handlePlay}>
@@ -167,7 +196,7 @@ function EditorNavbar(props: EditorNavbarProps) {
         <RedButton title='Zatrzymaj odtwarzanie' className={ state === 'stop' ? 'active' : '' } onClick={handleStop}>
           <RedIcon src={BtnStopIcon} />
         </RedButton>
-        <NormalButton title='Następna sekcja'>
+        <NormalButton title='Następna sekcja' onClick={handleNext}>
           <NormalIcon src={BtnNextIcon} />
         </NormalButton>
         <NormalButton title='Metronom' className={ native!.isMetronomeEnabled() ? 'active': '' } onClick={handleToggleMetronome}>

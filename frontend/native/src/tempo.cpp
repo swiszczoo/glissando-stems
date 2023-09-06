@@ -94,6 +94,21 @@ song_position Tempo::current_position(uint32_t track_position) const
     return varying_current_position(track_position);
 }
 
+uint32_t Tempo::bar_sample(uint32_t bar) const
+{
+    std::lock_guard lock(_mutex);
+
+    if (_mode == TempoMode::STABLE) {
+        return stable_bar_sample(bar);
+    }
+
+    if (_varying_bpm.size() < 2) {
+        return 0;
+    }
+
+    return varying_bar_sample(bar);
+}
+
 double Tempo::samples_per_beat_from_bpm(double bpm)
 {
     return AUDIO_SAMPLE_RATE * 60 / bpm;
@@ -111,6 +126,12 @@ song_position Tempo::stable_current_position(uint32_t track_position) const
         .step = whole_steps % _stable_time_sig + 1,
         .tick = whole_ticks - whole_bars * _stable_time_sig * TICKS_PER_STEP + 1,
     };
+}
+
+uint32_t Tempo::stable_bar_sample(uint32_t bar) const
+{
+    return static_cast<uint32_t>(
+        round(((bar - 1) * _stable_time_sig) * _stable_samples_per_beat));
 }
 
 size_t Tempo::varying_bpm_binsearch(
@@ -217,4 +238,29 @@ song_position Tempo::varying_current_position(uint32_t track_position) const
         .step = whole_steps % time_sig + 1,
         .tick = whole_ticks - whole_bars * time_sig * TICKS_PER_STEP + 1,
     };
+}
+
+uint32_t Tempo::varying_bar_sample(uint32_t bar) const
+{
+    for (auto it = _varying_bpm.rbegin(); it != _varying_bpm.rend(); ++it) {
+        if (it->bar > bar) {
+            continue;
+        }
+
+        auto it_next = it;
+
+        if (it == _varying_bpm.rbegin()) {
+            --it;
+        } else {
+            ++it_next;
+        }
+
+        double sample_delta = it_next->sample - it->sample;
+        double bar_delta = it_next->bar - it->bar;
+        double result = (bar - it->bar) / bar_delta * sample_delta + it->sample;
+
+        return static_cast<uint32_t>(round(result));
+    }
+
+    return 0;
 }

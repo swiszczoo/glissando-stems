@@ -14,6 +14,7 @@ import SolidBackgroundFrame from '../components/SolidBackgroundFrame';
 import { useAxios } from '../hooks/useAxios';
 import { useNative } from '../hooks/useNative';
 import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
+// import { useSession } from '../hooks/useSession';
 
 
 interface SongData {
@@ -83,14 +84,67 @@ function PlaybackStateChangeDetector(props: PlaybackStateChangeDetectorProps) {
   return <></>;
 }
 
+interface MediaSessionHandlerProps {
+  songTitle: string;
+  bandName: string;
+}
+
+function MediaSessionHandler(props: MediaSessionHandlerProps) {
+  const [ native, ] = useNative();
+
+  const playbackState = native!.getPlaybackState();
+
+  useEffect(() => {
+    if (playbackState === 'play') navigator.mediaSession.playbackState = 'playing';
+    if (playbackState === 'pause') navigator.mediaSession.playbackState = 'paused';
+    if (playbackState === 'stop') navigator.mediaSession.playbackState = 'none';
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: props.songTitle,
+      artist: props.bandName,
+      album: '',
+      artwork: [],
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => native!.play());
+    navigator.mediaSession.setActionHandler('pause', () => native!.pause());
+    navigator.mediaSession.setActionHandler('stop', () => native!.stop());
+
+    return () => {
+      navigator.mediaSession.playbackState = 'none';
+    };
+  }, [props.bandName, props.songTitle, native, playbackState]);
+
+  useEffect(() => {
+    navigator.mediaSession.setPositionState({
+      playbackRate: 1,
+      duration: native!.getTrackLength() / native!.getSampleRate(),
+      position: native!.getPlaybackPosition() / native!.getSampleRate(),
+    });
+  });
+
+  return <></>;
+}
+
 interface EditorContentProps {
   song: SongData;
   stems: StemData[];
 }
 
+function playbackStateToUnicode(state: string) {
+  if (state === 'play') return '\u25b6\ufe0f ';
+  if (state === 'pause') return '\u23f8 ';
+  if (state === 'stop') return '\u23f9 ';
+
+  return '';
+}
+
 function EditorContent(props: EditorContentProps) {
   const [ native, ] = useNative();
+  // const { bandName } = useSession();
   const { bpm, samples, title, form, varyingTempo } = props.song;
+
+  const playbackState = native?.getPlaybackState() || 'stop';
 
   useEffect(() => {
     if (bpm !== null) {
@@ -113,17 +167,20 @@ function EditorContent(props: EditorContentProps) {
   }, [bpm, native, samples, varyingTempo]);
 
   useEffect(() => {
-    document.title = title + ' \u2013 Glissando Stems';
-  }, [title]);
+    
+    document.title = `${playbackStateToUnicode(playbackState)}${title} \u2013 Glissando Stems`;
+  }, [playbackState, title]);
 
   return (
     <>
-      <EditorNavbar songTitle={title} />
+      <EditorNavbar songTitle={title} form={form} />
       <ContentContainer>
         <EditorTracks songName={title} form={form} data={props.stems} tempo={props.song.varyingTempo}/>
         <PeakMeter />
-        { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
       </ContentContainer>
+      { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
+      { /* Waiting till Audio Session API */}
+      { /* 'mediaSession' in navigator && <MediaSessionHandler songTitle={title} bandName={bandName!}/> */ }
     </>
   );
 }

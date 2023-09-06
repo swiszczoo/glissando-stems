@@ -40,4 +40,5 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE lodepng)
 string(REPLACE "/" "\\/" GS_WASM_PATH_PREFIX ${GS_WASM_PATH_PREFIX})
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD 
+    COMMAND sleep 1 # It looks like there's a race condition that confuses vite dev server
     COMMAND sed -i'' "\"s/\\(['\\\"]\\)\\(glissando-editor\\.\\)/\\1${GS_WASM_PATH_PREFIX}\\2/g\"" ${CMAKE_BINARY_DIR}/glissando-editor.js)

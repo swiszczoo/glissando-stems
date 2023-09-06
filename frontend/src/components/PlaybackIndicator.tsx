@@ -3,7 +3,7 @@ import { styled } from '@mui/system';
 
 import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
 
-const playbackIndicatorColor = '#f63';
+const playbackIndicatorColor = '#0f0';
 
 const PlaybackContainer = styled('div')(() => ({
   position: 'absolute',
@@ -26,8 +26,8 @@ const PlaybackBar = styled('div')(({ theme }) => ({
   width: 2,
   height: '100%',
   background: playbackIndicatorColor || theme.palette.primary.main,
-  transform: 'translateX(-50%)',
-  boxShadow: '0 0 6px black',
+  transform: 'translateX(-50%) translateZ(0)',
+  boxShadow: `0 0 0px 2px ${theme.palette.background.main}`,
   zIndex: 100,
 }));
 
@@ -37,7 +37,7 @@ const PlaybackBarTip = styled('div')(({ theme }) => ({
   width: 20,
   height: 12,
   background: playbackIndicatorColor || theme.palette.primary.main,
-  transform: 'translateX(-50%)',
+  transform: 'translateX(-50%) translateZ(0)',
   clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
 }));
 

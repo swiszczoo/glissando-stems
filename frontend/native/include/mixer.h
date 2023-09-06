@@ -36,6 +36,7 @@ public:
     uint32_t playback_position() const;
     song_position playback_position_bst() const;
     bool set_playback_position(uint32_t new_position);
+    uint32_t bar_sample(uint32_t bar) const;
 
     int sample_rate() const;
 

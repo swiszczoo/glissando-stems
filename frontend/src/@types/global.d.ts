@@ -32,6 +32,7 @@ interface NativeMixer {
   setPlaybackPosition: (sampleNum: number) => void;
   getPlaybackPosition: () => number;
   getPlaybackPositionBst: () => SongPosition;
+  getBarSample: (bar: number) => number;
   getSampleRate: () => number;
   setMetronomeEnabled: (enabled: boolean) => void;
   toggleMetronome: () => void;

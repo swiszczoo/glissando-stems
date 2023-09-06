@@ -107,6 +107,11 @@ bool Mixer::set_playback_position(uint32_t new_position)
     return false;
 }
 
+uint32_t Mixer::bar_sample(uint32_t bar) const
+{
+    return _tempo->bar_sample(bar);
+}
+
 int Mixer::sample_rate() const
 {
     return AUDIO_SAMPLE_RATE;

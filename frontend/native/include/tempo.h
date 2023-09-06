@@ -38,6 +38,8 @@ public:
     uint32_t current_time_signature(uint32_t track_position) const;
     song_position current_position(uint32_t track_position) const;
 
+    uint32_t bar_sample(uint32_t bar) const;
+
 private:
     enum class TempoMode { STABLE, VARYING };
     static const int TICKS_PER_STEP;
@@ -54,6 +56,7 @@ private:
     static double samples_per_beat_from_bpm(double bpm);
 
     song_position stable_current_position(uint32_t track_position) const;
+    uint32_t stable_bar_sample(uint32_t bar) const;
 
     size_t varying_bpm_binsearch(
         size_t start, size_t end, uint32_t track_position) const;
@@ -61,4 +64,5 @@ private:
     double varying_current_bpm(uint32_t track_position) const;
     uint32_t varying_current_time_signature(uint32_t track_position) const;
     song_position varying_current_position(uint32_t track_position) const;
+    uint32_t varying_bar_sample(uint32_t bar) const;
 };
