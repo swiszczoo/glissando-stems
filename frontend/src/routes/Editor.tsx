@@ -133,8 +133,8 @@ interface EditorContentProps {
 
 function playbackStateToUnicode(state: string) {
   if (state === 'play') return '\u25b6\ufe0f ';
-  if (state === 'pause') return '\u23f8 ';
-  if (state === 'stop') return '\u23f9 ';
+  if (state === 'pause') return '\u23f8\ufe0f ';
+  if (state === 'stop') return '\u23f9\ufe0f ';
 
   return '';
 }

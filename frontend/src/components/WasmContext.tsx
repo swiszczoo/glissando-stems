@@ -1,5 +1,6 @@
 import { 
   createContext, 
+  memo,
   useCallback, 
   useEffect, 
   useMemo, 
@@ -21,10 +22,14 @@ interface WasmContextType {
   invalidateState: () => void,
 }
 
-function WasmContextProvider(props: React.PropsWithChildren<object>) {
-  const [ instance, setInstance ] = useState<EmscriptenModule | undefined>(undefined);
+const WasmContextProvider = memo(function (props: React.PropsWithChildren<object>) {
+  const [ instance, setInstance ] = useState<EmscriptenModule | undefined>(window.Module);
   const [ inv, setInv ] = useState(0);
   const moduleIsLoading = useRef<boolean>(false);
+
+  if (instance) {
+    moduleIsLoading.current = false;
+  }
 
   const invalidateState = useCallback(() => setInv((inv) => inv + 1), []);
 
@@ -73,6 +78,8 @@ function WasmContextProvider(props: React.PropsWithChildren<object>) {
       {props.children}
     </WasmContext.Provider>
   )
-}
+});
+
+WasmContextProvider.displayName = 'Memo(WasmContextProvider)';
 
 export default WasmContextProvider;

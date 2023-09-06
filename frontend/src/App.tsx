@@ -71,22 +71,22 @@ function AudioContextKiller() {
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <AxiosContextProvider>
-        <SessionContextProvider>
-          <WasmContextProvider>
-            <AudioContextKiller />
-            <Routes>
-              <Route path='' Component={() => <Page name="Ładowanie"><MainRoute /></Page>} />
-              <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute /></Page>} />
-              <Route path='songs' Component={() => <Page name="Lista utworów"><SongListRoute /></Page>} />
-              <Route path='songs/edit/:slug' Component={EditorRoute} />
-              <Route path='*' Component={() => <Page name="Nie znaleziono"><NotFoundRoute /></Page>} />
-            </Routes>
-          </WasmContextProvider>
-        </SessionContextProvider>
-      </AxiosContextProvider>
-    </ThemeProvider>
+    <WasmContextProvider>
+      <ThemeProvider theme={theme}>
+        <AxiosContextProvider>
+          <SessionContextProvider>
+              <AudioContextKiller />
+              <Routes>
+                <Route path='' Component={() => <Page name="Ładowanie"><MainRoute /></Page>} />
+                <Route path='login' Component={() => <Page name="Logowanie"><LoginRoute /></Page>} />
+                <Route path='songs' Component={() => <Page name="Lista utworów"><SongListRoute /></Page>} />
+                <Route path='songs/edit/:slug' Component={EditorRoute} />
+                <Route path='*' Component={() => <Page name="Nie znaleziono"><NotFoundRoute /></Page>} />
+              </Routes>
+          </SessionContextProvider>
+        </AxiosContextProvider>
+      </ThemeProvider>
+    </WasmContextProvider>
   );
 }
 
