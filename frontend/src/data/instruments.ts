@@ -8,6 +8,7 @@ import PercSfxIcon from '../assets/instrument-icons/perc-sfx.svg';
 import PercOverheadIcon from '../assets/instrument-icons/perc-overhead.svg';
 import PercSampleIcon from '../assets/instrument-icons/perc-sample.svg';
 import BassMainIcon from '../assets/instrument-icons/bass-main.svg';
+import BassKeysIcon from '../assets/instrument-icons/bass-keys.svg';
 import GuitarMainIcon from '../assets/instrument-icons/guitar-main.svg';
 import GuitarLeftIcon from '../assets/instrument-icons/guitar-left.svg';
 import GuitarRightIcon from '../assets/instrument-icons/guitar-right.svg';
@@ -100,6 +101,12 @@ export const InstrumentMap: Record<string, InstrumentType> = {
     category: InstrumentCategory.BASS_GUITAR,
     iconSrc: BassMainIcon,
     orderingKey: 1,
+  },
+  'bass-keys': {
+    displayName: 'Bas (klawisze)',
+    category: InstrumentCategory.BASS_GUITAR,
+    iconSrc: BassKeysIcon,
+    orderingKey: 1.1,
   },
   'guitar-main': {
     displayName: 'Gitara elektryczna',
