@@ -31,7 +31,10 @@ export class Song {
   public title: string;
 
   @Column('float', { nullable: true })
-  public bpm: number;
+  public bpm?: number;
+
+  @Column('smallint', { nullable: true, default: 4 })
+  public timeSignature?: number;
 
   @Column('simple-json', { nullable: false })
   public form: { bar: number; name: string }[];

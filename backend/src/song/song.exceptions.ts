@@ -21,4 +21,7 @@ export class SongExceptions {
   public TEMPO_NOT_ASCENDING = new BadRequestException(
     'Varying tempo array must be sorted by sample numbers in ascending order',
   );
+  public EITHER_VARYING_OR_STATIC = new BadRequestException(
+    'You must provide both bpm and timeSignature or varyingTempo, but not at the same time',
+  );
 }

@@ -27,17 +27,17 @@ double Metronome::gain() const
 
 void Metronome::process(uint32_t first_sample)
 {
-    auto prev_position = _tempo.current_position(first_sample + TICK_OFFSET - 1);
+    auto old_position = _tempo.current_position(first_sample + TICK_OFFSET - 1);
 
     for (int i = 0; i < AUDIO_CHUNK_SAMPLES; ++i) {
         uint32_t sample = first_sample + i + TICK_OFFSET;
-        auto next_position = _tempo.current_position(sample);
-        next_position.tick = prev_position.tick;
+        auto new_position = _tempo.current_position(sample);
+        new_position.tick = old_position.tick;
 
-        if (prev_position != next_position || sample == TICK_OFFSET) {
+        if (old_position != new_position || sample == TICK_OFFSET) {
             // Metronome should tick right now
 
-            if (next_position.step == 1) {
+            if (new_position.step == 1) {
                 // Bar tick
                 _current_sample = reinterpret_cast<const int16_t*>(SOUND_BAR);
                 _current_sample_length = SOUND_BAR_SAMPLES;
@@ -50,7 +50,7 @@ void Metronome::process(uint32_t first_sample)
             _sample_position = 0;
         }
 
-        prev_position = next_position;
+        old_position = new_position;
     }
 }
 

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { AxiosProgressEvent } from 'axios';
-import { styled } from '@mui/system';
 
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -15,27 +14,12 @@ import { GreenButton, NormalButton, RedButton } from './NavbarButton';
 import ProgressBar from './ProgressBar';
 import { GlissandoOption, GlissandoSelect } from './Select';
 import Slider from './Slider';
+import SliderBox from './SliderBox';
 
 import { InstrumentMap } from '../data/instruments';
 
 import { useAxios } from '../hooks/useAxios';
 import { useNative } from '../hooks/useNative';
-
-
-
-const SliderBox = styled('div')(() => ({
-  display: 'flex',
-  flexDirection: 'row',
-  flexWrap: 'nowrap',
-  alignItems: 'center',
-  '& > div': {
-    whiteSpace: 'nowrap',
-    minWidth: 100,
-    textAlign: 'right',
-    fontSize: 20,
-    fontWeight: 700,
-  }
-}));
 
 
 interface StemAddEditModalProps {

@@ -21,17 +21,46 @@ const MuteSoloContainer = styled('div')(() => ({
 }));
 
 interface MuteSoloProps {
-  mute?: boolean,
-  solo?: boolean,
-  onMute?: () => void,
-  onSolo?: () => void,
+  mute?: boolean;
+  solo?: boolean;
+  onMute?: () => void;
+  onMuteDoubleClick?: () => void;
+  onSolo?: () => void;
+  onSoloDoubleClick?: () => void;
 }
 
 function MuteSolo(props: MuteSoloProps) {
+  const handleMuteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (event.detail === 2) {
+      if (props.onMuteDoubleClick) {
+        props.onMuteDoubleClick();
+        return;
+      }
+    }
+
+    if (props.onMute) {
+      props.onMute();
+    }
+  };
+
+  const handleSoloClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (event.detail === 2) {
+      if (props.onSoloDoubleClick) {
+        props.onSoloDoubleClick();
+        return;
+      }
+    }
+
+    if (props.onSolo) {
+      props.onSolo();
+    }
+  };
+
+
   return (
     <MuteSoloContainer>
-      <RedButton className={props.mute ? 'active' : ''} title='Wycisz' onClick={props.onMute}>M</RedButton>
-      <GreenButton className={props.solo ? 'active' : ''} title='Solo' onClick={props.onSolo}>S</GreenButton>
+      <RedButton className={props.mute ? 'active' : ''} title='Wycisz' onClick={handleMuteClick}>M</RedButton>
+      <GreenButton className={props.solo ? 'active' : ''} title='Solo' onClick={handleSoloClick}>S</GreenButton>
     </MuteSoloContainer>
   );
 }

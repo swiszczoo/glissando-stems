@@ -5,6 +5,7 @@ export class SongResponseDto {
   slug: string;
   title: string;
   bpm: number;
+  timeSignature: number;
   duration: number;
   samples: number;
   stemCount: number;
@@ -20,6 +21,7 @@ export class SongResponseDto {
       slug: entity.slug,
       title: entity.title,
       bpm: entity.bpm || null,
+      timeSignature: entity.timeSignature,
       duration: samplesToSeconds(entity.samples),
       samples: entity.samples,
       stemCount: entity.stemCount,

@@ -111,7 +111,7 @@ function EditorTrack(props: EditorTrackProps) {
   const waveformOrdinal = native!.getWaveformOrdinal(props.stemData.id);
 
   const waveformDataUri = useMemo(() => {
-    waveformOrdinal;
+    waveformOrdinal; // to bypass unnecessary dependency warning
     return native!.getWaveformDataUri(props.stemData.id)
   }, [native, waveformOrdinal, props.stemData.id]);
 
@@ -123,6 +123,10 @@ function EditorTrack(props: EditorTrackProps) {
   const handleMute = useCallback(() => {
     native!.toggleMute(props.stemData.id);
   }, [native, props.stemData.id]);
+
+  const handleUnmute = useCallback(() => {
+    native!.unmuteAll();
+  }, [native]);
 
   const handleSolo = useCallback(() => {
     native!.toggleSolo(props.stemData.id);
@@ -146,6 +150,7 @@ function EditorTrack(props: EditorTrackProps) {
         mute={native!.isStemMuted(props.stemData.id)} 
         solo={native!.isStemSoloed(props.stemData.id)}
         onMute={handleMute}
+        onMuteDoubleClick={handleUnmute}
         onSolo={handleSolo}
         />
       <span style={{ width: 8 }}/>

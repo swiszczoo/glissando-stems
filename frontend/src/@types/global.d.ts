@@ -39,7 +39,7 @@ interface NativeMixer {
   isMetronomeEnabled: () => boolean;
   setMetronomeGainDb: (decibels: number) => void;
   getMetronomeGainDb: () => number;
-  setTrackBpm: (bpm: number) => void;
+  setTrackBpm: (bpm: number, timeSignatureNumerator?: number) => void;
   setTrackVaryingBpm: (tags: TempoType[]) => void;
   getTrackBpm: () => number;
   getLeftChannelOutDb: () => number;
@@ -52,6 +52,7 @@ interface NativeMixer {
   getWaveformDataUri: (stemId: number) => string;
   toggleMute: (stemId: number) => void;
   toggleSolo: (stemId: number) => void;
+  unmuteAll: () => void;
   isStemMuted: (stemId: number) => boolean;
   isStemSoloed: (stemId: number) => boolean;
   getLimiterReductionDb: () => number;

@@ -48,6 +48,15 @@ export class SongController {
     private stemService: StemService,
   ) {}
 
+  private validateMetadata(dto: SongCreateDto): void {
+    const onetime = !!(dto.bpm && dto.timeSignature) ? 1 : 0;
+    const varying = !!dto.varyingTempo ? 1 : 0;
+
+    if (!(onetime ^ varying)) {
+      throw this.exceptions.EITHER_VARYING_OR_STATIC;
+    }
+  }
+
   private validateForm(dto: SongCreateDto): void {
     if (dto.form.length === 0) return;
 
@@ -72,6 +81,12 @@ export class SongController {
 
       previous = tempoElement.sample;
     }
+  }
+
+  private validateSongDto(dto: SongCreateDto): void {
+    this.validateMetadata(dto);
+    this.validateForm(dto);
+    this.validateTempo(dto);
   }
 
   @Get()
@@ -129,8 +144,7 @@ export class SongController {
     @Session() session: SessionData,
     @Body() params: SongCreateDto,
   ): Promise<SongResponseDto> {
-    this.validateForm(params);
-    this.validateTempo(params);
+    this.validateSongDto(params);
 
     const song = await this.service.createSongByBand(session.bandId, params);
 

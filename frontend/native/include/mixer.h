@@ -46,7 +46,7 @@ public:
     void set_metronome_gain_db(double gain);
     double metronome_gain_db() const;
 
-    void set_track_bpm(double bpm);
+    void set_track_bpm(double bpm, uint32_t time_sig_numerator = 4);
     void set_track_varying_bpm(const std::vector<tempo_tag>& tags);
     double track_bpm() const;
     double left_channel_out_db() const;
@@ -63,6 +63,7 @@ public:
 
     void toggle_mute(uint32_t stem_id);
     void toggle_solo(uint32_t stem_id);
+    void unmute_all();
     bool stem_muted(uint32_t stem_id) const;
     bool stem_soloed(uint32_t stem_id) const;
 

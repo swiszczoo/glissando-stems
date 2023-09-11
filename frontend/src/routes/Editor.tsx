@@ -22,6 +22,7 @@ interface SongData {
   slug: string;
   title: string;
   bpm: number;
+  timeSignature: number;
   duration: number;
   samples: number;
   stemCount: number;
@@ -142,13 +143,13 @@ function playbackStateToUnicode(state: string) {
 function EditorContent(props: EditorContentProps) {
   const [ native, ] = useNative();
   // const { bandName } = useSession();
-  const { bpm, samples, title, form, varyingTempo } = props.song;
+  const { bpm, samples, timeSignature, title, form, varyingTempo } = props.song;
 
   const playbackState = native?.getPlaybackState() || 'stop';
 
   useEffect(() => {
-    if (bpm !== null) {
-      native!.setTrackBpm(bpm);
+    if (bpm !== null && timeSignature !== null) {
+      native!.setTrackBpm(bpm, timeSignature);
     } else {
       const vector = new window.Module.VectorTempoTag();
 
@@ -164,7 +165,7 @@ function EditorContent(props: EditorContentProps) {
       vector.delete();
     }
     native!.setTrackLength(samples);
-  }, [bpm, native, samples, varyingTempo]);
+  }, [bpm, native, timeSignature, samples, varyingTempo]);
 
   useEffect(() => {
     

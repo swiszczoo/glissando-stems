@@ -40,6 +40,7 @@ EMSCRIPTEN_BINDINGS(editor) {
         .function("getWaveformDataUri", &Mixer::waveform_data_uri)
         .function("toggleMute", &Mixer::toggle_mute)
         .function("toggleSolo", &Mixer::toggle_solo)
+        .function("unmuteAll", &Mixer::unmute_all)
         .function("isStemMuted", &Mixer::stem_muted)
         .function("isStemSoloed", &Mixer::stem_soloed)
         .function("getLimiterReductionDb", &Mixer::limiter_reduction_db)

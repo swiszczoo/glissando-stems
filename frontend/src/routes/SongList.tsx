@@ -19,6 +19,8 @@ import Modal from '../components/Modal';
 import Navbar from "../components/Navbar";
 import { GreenButton, YellowButton, RedButton } from "../components/NavbarButton";
 import SolidBackgroundFrame from "../components/SolidBackgroundFrame";
+import Slider from '../components/Slider';
+import SliderBox from '../components/SliderBox';
 
 import { useAxios } from '../hooks/useAxios';
 import { useSession } from "../hooks/useSession";
@@ -154,6 +156,7 @@ interface ModalProps {
 function AddSongModal(props: ModalProps) {
   const [ title, setTitle ] = useState('');
   const [ tempo, setTempo ] = useState('120.000');
+  const [ signature, setSignature ] = useState(4);
   const [ processing, setProcessing ] = useState(false);
   const axios = useAxios();
   const session = useSession();
@@ -185,6 +188,7 @@ function AddSongModal(props: ModalProps) {
     axios.post('/api/songs', {
       title: title,
       bpm: parseFloat(tempo),
+      timeSignature: signature,
       form: [],
     }).then(() => {
       queryClient.invalidateQueries(['songs']);
@@ -208,6 +212,10 @@ function AddSongModal(props: ModalProps) {
     });
   };
 
+  const handleSignatureChange = (_: unknown, value: number | number[]) => {
+    setSignature(value as number);
+  };
+
   return (
     <Modal open={props.open} onBlur={props.onCancel} title='Dodaj nowy utwór' buttons={() =>
       <>
@@ -217,9 +225,15 @@ function AddSongModal(props: ModalProps) {
         </GreenButton>
       </>
     }>
-      <Input value={title} placeholder='Tytuł utworu' onChange={handleTitleChange}/>
+      Tytuł utworu:
+      <Input value={title} placeholder='Wprowadź tytuł utworu' onChange={handleTitleChange}/>
+      Metrum:
+      <SliderBox>
+        <Slider min={1} max={9} value={signature} onChange={handleSignatureChange}/>
+        <div>{signature} / 4</div>
+      </SliderBox>
+      Tempo:
       <TempoFrame>
-        <span>Tempo:&nbsp;&nbsp;</span>
         <Input onKeyDown={handleTempoKeyDown.bind(null, 0)} value={tempo[0]}></Input>
         <Input data-focusafter='bpm0' onKeyDown={handleTempoKeyDown.bind(null, 1)} value={tempo[1]}></Input>
         <Input data-focusafter='bpm1' onKeyDown={handleTempoKeyDown.bind(null, 2)} value={tempo[2]}></Input>
@@ -227,7 +241,7 @@ function AddSongModal(props: ModalProps) {
         <Input data-focusafter='bpm2' onKeyDown={handleTempoKeyDown.bind(null, 4)} value={tempo[4]}></Input>
         <Input data-focusafter='bpm4' onKeyDown={handleTempoKeyDown.bind(null, 5)} value={tempo[5]}></Input>
         <Input data-focusafter='bpm5' onKeyDown={handleTempoKeyDown.bind(null, 6)} value={tempo[6]}></Input>
-        <span style={{ fontWeight: 700 }}>BPM</span>
+        <span style={{ fontWeight: 700 }}>&nbsp;BPM</span>
       </TempoFrame>
     </Modal>
   );

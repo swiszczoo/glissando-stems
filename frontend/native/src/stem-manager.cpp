@@ -82,6 +82,13 @@ void StemManager::toggle_solo(uint32_t stem_id)
     }
 }
 
+void StemManager::unmute_all()
+{
+    std::lock_guard lock(_mutex);
+    _muted_stems.clear();
+    _soloed_stem = nullopt;
+}
+
 bool StemManager::stem_muted(uint32_t stem_id) const
 {
     if (_soloed_stem.has_value()) {

@@ -40,6 +40,7 @@ public:
 
     void toggle_mute(uint32_t stem_id);
     void toggle_solo(uint32_t stem_id);
+    void unmute_all();
     bool stem_muted(uint32_t stem_id) const;
     bool stem_soloed(uint32_t stem_id) const;
     bool stem_audible(uint32_t stem_id) const;

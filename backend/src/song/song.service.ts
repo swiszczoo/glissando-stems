@@ -6,15 +6,10 @@ import * as nanoid from 'nanoid';
 
 import { Config } from '../config';
 
+import { SongCreateDto } from './dto/song-create.dto';
+
 import { Song } from './entities/song.entity';
 import { Stem, StemStatus } from './entities/stem.entity';
-
-interface CreateSongParams {
-  bpm: number;
-  title: string;
-  form: { bar: number; name: string }[];
-  varyingTempo?: { sample: number; bar: number; timeSigNum: number }[];
-}
 
 const NANOID_SIZE = 60;
 
@@ -91,12 +86,10 @@ export class SongService {
     }
   }
 
-  async createSongByBand(
-    bandId: number,
-    params: CreateSongParams,
-  ): Promise<Song> {
+  async createSongByBand(bandId: number, params: SongCreateDto): Promise<Song> {
     const song = await this.songRepository.save({
-      bpm: params.bpm,
+      bpm: params.bpm ?? null,
+      timeSignature: params.timeSignature ?? null,
       form: params.form,
       owner: { id: bandId },
       slug: nanoid.nanoid(NANOID_SIZE),

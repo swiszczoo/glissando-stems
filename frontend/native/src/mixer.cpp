@@ -149,9 +149,9 @@ double Mixer::metronome_gain_db() const
     return _metronome_gain_db;
 }
 
-void Mixer::set_track_bpm(double bpm)
+void Mixer::set_track_bpm(double bpm, uint32_t time_sig_numerator)
 {
-    _tempo->set_stable_bpm(bpm, 4);
+    _tempo->set_stable_bpm(bpm, time_sig_numerator);
     invalidate_state();
 }
 
@@ -219,6 +219,12 @@ void Mixer::toggle_mute(uint32_t stem_id)
 void Mixer::toggle_solo(uint32_t stem_id)
 {
     _stems.toggle_solo(stem_id);
+    invalidate_state();
+}
+
+void Mixer::unmute_all()
+{
+    _stems.unmute_all();
     invalidate_state();
 }
 
