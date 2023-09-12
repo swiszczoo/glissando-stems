@@ -73,7 +73,7 @@ export const InstrumentMap: Record<string, InstrumentType> = {
     orderingKey: 0.2,
   },
   'perc-overhead': {
-    displayName: 'Perkusja (mikrofony overhead)',
+    displayName: 'Perkusja (mikrofon overhead)',
     category: InstrumentCategory.PERCUSSION,
     iconSrc: PercOverheadIcon,
     orderingKey: 0.3,
@@ -97,13 +97,13 @@ export const InstrumentMap: Record<string, InstrumentType> = {
     orderingKey: 0.98,
   },
   'bass-main': {
-    displayName: 'Bas (gitara)',
+    displayName: 'Gitara basowa',
     category: InstrumentCategory.BASS_GUITAR,
     iconSrc: BassMainIcon,
     orderingKey: 1,
   },
   'bass-keys': {
-    displayName: 'Bas (klawisze)',
+    displayName: 'Syntezator basowy',
     category: InstrumentCategory.BASS_GUITAR,
     iconSrc: BassKeysIcon,
     orderingKey: 1.1,

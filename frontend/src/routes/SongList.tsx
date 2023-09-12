@@ -13,14 +13,12 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { styled } from '@mui/system';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import Input from '../components/Input';
 import LoadingBar from '../components/LoadingBar';
 import Modal from '../components/Modal';
 import Navbar from "../components/Navbar";
 import { GreenButton, YellowButton, RedButton } from "../components/NavbarButton";
 import SolidBackgroundFrame from "../components/SolidBackgroundFrame";
-import Slider from '../components/Slider';
-import SliderBox from '../components/SliderBox';
+import SongAddEditModal from '../components/SongAddEditModal';
 
 import { useAxios } from '../hooks/useAxios';
 import { useSession } from "../hooks/useSession";
@@ -131,123 +129,15 @@ function Song(props: SongProps) {
   );
 }
 
-const TempoFrame = styled('div')(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'row',
-  flexWrap: 'nowrap',
-  alignItems: 'baseline',
-  justifyContent: 'center',
-  '*': {
-    marginRight: theme.spacing(0.5)
-  },
-  '* input': {
-    width: theme.spacing(4),
-    padding: `${theme.spacing(1.5)} ${theme.spacing(0)}`,
-    fontWeight: 700,
-    textAlign: 'center',
-  }
-}));
-
-interface ModalProps {
+interface DeleteSongModalProps {
   open?: boolean;
   onCancel?: () => void;
+  songId: number;
+  songTitle: string;
 }
 
-function AddSongModal(props: ModalProps) {
-  const [ title, setTitle ] = useState('');
-  const [ tempo, setTempo ] = useState('120.000');
-  const [ signature, setSignature ] = useState(4);
-  const [ processing, setProcessing ] = useState(false);
-  const axios = useAxios();
-  const session = useSession();
-  const queryClient = useQueryClient();
 
-  const handleTempoKeyDown = (charIdx: number, event: React.KeyboardEvent<HTMLInputElement>) => {
-    const nextInputId = `bpm${charIdx}`;
-    const digits = '0123456789';
-    const digit = digits.indexOf(event.key);
-
-    if (digit >= 0) {
-      setTempo((currentTempo) => currentTempo.substring(0, charIdx) + digit + currentTempo.substring(charIdx + 1));
-      const nextInput = document.querySelector<HTMLInputElement>(`div[data-focusafter=${nextInputId}] > input`);
-      nextInput?.focus();
-      setTimeout(() => nextInput?.select(), 0);
-    }
-  };
-
-  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value.substring(0, 255));
-  };
-
-  const valid = title.length > 0 && tempo >= '040.000' && !processing;
-
-  const handleAccept = () => {
-    if (!valid) return;
-    setProcessing(true);
-
-    axios.post('/api/songs', {
-      title: title,
-      bpm: parseFloat(tempo),
-      timeSignature: signature,
-      form: [],
-    }).then(() => {
-      queryClient.invalidateQueries(['songs']);
-      setProcessing(false);
-
-      if (props.onCancel) props.onCancel();
-    }).catch((error: AxiosError) => {
-      setProcessing(false);
-
-      if (error.response) {
-        if (error.response.status === 403) {
-          session.invalidateSession();
-        } else {
-          console.error(error);
-          alert((error.response.data as Record<string, string>)['message']);
-        }
-      } else {
-        console.error(error);
-        alert('Nie można dodać utworu! Wystąpił nieznany błąd.');
-      }
-    });
-  };
-
-  const handleSignatureChange = (_: unknown, value: number | number[]) => {
-    setSignature(value as number);
-  };
-
-  return (
-    <Modal open={props.open} onBlur={props.onCancel} title='Dodaj nowy utwór' buttons={() =>
-      <>
-        <RedButton onClick={props.onCancel}><CloseRoundedIcon />&nbsp;Anuluj</RedButton>&nbsp;&nbsp;
-        <GreenButton onClick={handleAccept} disabled={!valid}>
-          <CheckRoundedIcon />{ processing ? '\u2022 \u2022 \u2022' : <>&nbsp;Zaakceptuj</> }
-        </GreenButton>
-      </>
-    }>
-      Tytuł utworu:
-      <Input value={title} placeholder='Wprowadź tytuł utworu' onChange={handleTitleChange}/>
-      Metrum:
-      <SliderBox>
-        <Slider min={1} max={9} value={signature} onChange={handleSignatureChange}/>
-        <div>{signature} / 4</div>
-      </SliderBox>
-      Tempo:
-      <TempoFrame>
-        <Input onKeyDown={handleTempoKeyDown.bind(null, 0)} value={tempo[0]}></Input>
-        <Input data-focusafter='bpm0' onKeyDown={handleTempoKeyDown.bind(null, 1)} value={tempo[1]}></Input>
-        <Input data-focusafter='bpm1' onKeyDown={handleTempoKeyDown.bind(null, 2)} value={tempo[2]}></Input>
-        <span style={{ fontWeight: 700 }}>.</span>
-        <Input data-focusafter='bpm2' onKeyDown={handleTempoKeyDown.bind(null, 4)} value={tempo[4]}></Input>
-        <Input data-focusafter='bpm4' onKeyDown={handleTempoKeyDown.bind(null, 5)} value={tempo[5]}></Input>
-        <Input data-focusafter='bpm5' onKeyDown={handleTempoKeyDown.bind(null, 6)} value={tempo[6]}></Input>
-        <span style={{ fontWeight: 700 }}>&nbsp;BPM</span>
-      </TempoFrame>
-    </Modal>
-  );
-}
-
-function DeleteSongModal(props: ModalProps & { songId: number, songTitle: string }) {
+function DeleteSongModal(props: DeleteSongModalProps) {
   const [ processing, setProcessing ] = useState(false);
   const axios = useAxios();
   const session = useSession();
@@ -376,7 +266,7 @@ function SongListRoute() {
         )}
         { status === 'success' && data.length === 0 && <>Obecnie nie ma w systemie żadnych utworów!</>}
       </MainSection>
-      <AddSongModal 
+      <SongAddEditModal 
         key={modalKey.current} 
         open={addModalOpen} 
         onCancel={handleAddModalClose} />

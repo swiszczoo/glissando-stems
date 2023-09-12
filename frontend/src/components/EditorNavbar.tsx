@@ -1,8 +1,12 @@
+import { useCallback, useState } from 'react';
 import { styled } from '@mui/system';
+
+import EditIcon from '@mui/icons-material/Edit';
 
 import EditorTimer from './EditorTimer';
 import { NormalButton, GreenButton, RedButton, YellowButton } from './NavbarButton';
 import Navbar, { NavbarSeparator } from './Navbar';
+import SongAddEditModal from './SongAddEditModal';
 
 import BpmIcon from '../assets/icon-bpm.svg';
 import TimeIcon from '../assets/icon-time.svg';
@@ -16,7 +20,8 @@ import BtnTickIcon from '../assets/btn-tick.svg';
 
 import { useNative } from '../hooks/useNative';
 import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
-import { useCallback, useState } from 'react';
+
+import { SongData } from '../routes/Editor';
 
 interface FieldWithIconProps {
   iconSrc: string;
@@ -110,8 +115,12 @@ const RedIcon = styled('img')(() => ({
   }
 }));
 
+const RoundButton = styled(NormalButton)(({ theme }) => ({
+  padding: theme.spacing(1),
+}));
+
 interface EditorNavbarProps {
-  songTitle: string;
+  songData: SongData;
   form: FormType;
 }
 
@@ -156,7 +165,7 @@ function EditorNavbar(props: EditorNavbarProps) {
 
   const handleStop = () => {
     if (state === 'stop')
-      return
+      return;
 
     native!.stop();
     setTimeout(() => window.audioContext?.suspend(), 100);
@@ -181,38 +190,43 @@ function EditorNavbar(props: EditorNavbarProps) {
   }
 
   return (
-    <Navbar title={props.songTitle} customSeparator={true}>
-      <NavbarSeparator />
-      <PlaybackControlsContainer>
-        <NormalButton title='Poprzednia sekcja' onClick={handlePrev}>
-          <NormalIcon src={BtnPrevIcon} />
-        </NormalButton>
-        <GreenButton title='Odtwarzaj' className={ state === 'play' ? 'active' : '' } onClick={handlePlay}>
-          <GreenIcon src={BtnPlayIcon} />
-        </GreenButton>
-        <YellowButton title='Wstrzymaj odtwarzanie' className={ state === 'pause' ? 'active' : '' } onClick={handlePause}>
-          <YellowIcon src={BtnPauseIcon} />
-        </YellowButton>
-        <RedButton title='Zatrzymaj odtwarzanie' className={ state === 'stop' ? 'active' : '' } onClick={handleStop}>
-          <RedIcon src={BtnStopIcon} />
-        </RedButton>
-        <NormalButton title='Następna sekcja' onClick={handleNext}>
-          <NormalIcon src={BtnNextIcon} />
-        </NormalButton>
-        <NormalButton title='Metronom' className={ native!.isMetronomeEnabled() ? 'active': '' } onClick={handleToggleMetronome}>
-          <NormalIcon src={BtnTickIcon} />
-        </NormalButton>
-      </PlaybackControlsContainer>
-      <span style={{ width: 32 }} />
-      <FieldWithIcon iconSrc={TimeIcon} width={11} title='Pozycja odtwarzania'>
-        <EditorTimer/>
-      </FieldWithIcon>
-      <span style={{ width: 32 }} />
-      <FieldWithIcon iconSrc={BpmIcon} width={4.5} title='Tempo'>
-        { bpm }
-      </FieldWithIcon>
-      <span style={{ width: 32 }} />
-    </Navbar>
+    <>
+      <Navbar title={props.songData.title} customSeparator={true}>
+        &nbsp;&nbsp;
+        <RoundButton title='Właściwości utworu'><EditIcon /></RoundButton>
+        <NavbarSeparator />
+        <PlaybackControlsContainer>
+          <NormalButton title='Poprzednia sekcja' onClick={handlePrev}>
+            <NormalIcon src={BtnPrevIcon} />
+          </NormalButton>
+          <GreenButton title='Odtwarzaj' className={ state === 'play' ? 'active' : '' } onClick={handlePlay}>
+            <GreenIcon src={BtnPlayIcon} />
+          </GreenButton>
+          <YellowButton title='Wstrzymaj odtwarzanie' className={ state === 'pause' ? 'active' : '' } onClick={handlePause}>
+            <YellowIcon src={BtnPauseIcon} />
+          </YellowButton>
+          <RedButton title='Zatrzymaj odtwarzanie' className={ state === 'stop' ? 'active' : '' } onClick={handleStop}>
+            <RedIcon src={BtnStopIcon} />
+          </RedButton>
+          <NormalButton title='Następna sekcja' onClick={handleNext}>
+            <NormalIcon src={BtnNextIcon} />
+          </NormalButton>
+          <NormalButton title='Metronom' className={ native!.isMetronomeEnabled() ? 'active': '' } onClick={handleToggleMetronome}>
+            <NormalIcon src={BtnTickIcon} />
+          </NormalButton>
+        </PlaybackControlsContainer>
+        <span style={{ width: 32 }} />
+        <FieldWithIcon iconSrc={TimeIcon} width={11} title='Pozycja odtwarzania'>
+          <EditorTimer/>
+        </FieldWithIcon>
+        <span style={{ width: 32 }} />
+        <FieldWithIcon iconSrc={BpmIcon} width={4.5} title='Tempo'>
+          { bpm }
+        </FieldWithIcon>
+        <span style={{ width: 32 }} />
+      </Navbar>
+      <SongAddEditModal songData={props.songData}/>
+    </>
   );
 }
 

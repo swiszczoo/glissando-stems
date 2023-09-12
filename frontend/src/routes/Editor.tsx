@@ -17,7 +17,7 @@ import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
 // import { useSession } from '../hooks/useSession';
 
 
-interface SongData {
+export interface SongData {
   id: number;
   slug: string;
   title: string;
@@ -174,13 +174,13 @@ function EditorContent(props: EditorContentProps) {
 
   return (
     <>
-      <EditorNavbar songTitle={title} form={form} />
+      <EditorNavbar songData={props.song} form={form} />
       <ContentContainer>
         <EditorTracks songName={title} form={form} data={props.stems} tempo={props.song.varyingTempo}/>
         <PeakMeter />
       </ContentContainer>
       { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
-      { /* Waiting till Audio Session API */}
+      { /* Waiting for Audio Session API */}
       { /* 'mediaSession' in navigator && <MediaSessionHandler songTitle={title} bandName={bandName!}/> */ }
     </>
   );

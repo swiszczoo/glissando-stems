@@ -18,7 +18,7 @@ const makeNavbarButton = (textColor: string) => styled(Button)(({ theme }) => ({
     placeItems: 'center',
     whiteSpace: 'nowrap',
     userSelect: 'none',
-    '&:not(:disabled):hover, &:focus': {
+    '&:not(:disabled):hover, &:focus-visible': {
         background: `${textColor}40`,
         boxShadow: `0 0 10px ${textColor}40`,
         zIndex: 1,

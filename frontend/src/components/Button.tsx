@@ -16,7 +16,7 @@ const GlissandoButton = styled(Button)(({ theme }) => ({
     display: 'flex',
     placeContent: 'center',
     whiteSpace: 'nowrap',
-    '&:not(:disabled):hover, &:focus': {
+    '&:not(:disabled):hover, &:focus-visible': {
         background: theme.palette.primary.light,
         boxShadow: `0 0 10px ${theme.palette.primary.dark}`
     },

@@ -130,7 +130,7 @@ function PeakMeter() {
       <div>
         <PeakMeterLegend>L</PeakMeterLegend>
         <PeakMeterLegend>R</PeakMeterLegend>
-        <PeakMeterLegend>dB(TP)</PeakMeterLegend>
+        <PeakMeterLegend>dBTP</PeakMeterLegend>
       </div>
       <div style={{ position: 'relative', flexGrow: 1 }}>
         <PeakMeterBars leftDb={db[0]} rightDb={db[1]}/>

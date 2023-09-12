@@ -31,7 +31,7 @@ const SelectButton = styled('button')(({ theme }) => ({
   transition: '0.1s',
   outline: 'solid 2px transparent',
   textAlign: 'left',
-  '&:not(:disabled):hover, &:focus': {
+  '&:not(:disabled):hover, &:focus-visible': {
     background: `${theme.palette.primary.main}40`,
     boxShadow: `0 0 10px ${theme.palette.primary.main}40`,
   },
