@@ -63,7 +63,6 @@ function UploadZone() {
 
   const handleInvalidate = () => {
     queryClient.invalidateQueries(['songs']);
-    queryClient.invalidateQueries(['songs', slug]);
     queryClient.invalidateQueries(['stems', slug]);
   };
 

@@ -6,7 +6,7 @@ import * as nanoid from 'nanoid';
 
 import { Config } from '../config';
 
-import { SongCreateDto } from './dto/song-create.dto';
+import { SongRequestDto } from './dto/song-request.dto';
 
 import { Song } from './entities/song.entity';
 import { Stem, StemStatus } from './entities/stem.entity';
@@ -86,12 +86,15 @@ export class SongService {
     }
   }
 
-  async createSongByBand(bandId: number, params: SongCreateDto): Promise<Song> {
+  async createSongByBand(
+    bandId: number,
+    params: SongRequestDto,
+  ): Promise<Song> {
     const song = await this.songRepository.save({
       bpm: params.bpm ?? null,
       timeSignature: params.timeSignature ?? null,
       form: params.form,
-      owner: { id: bandId },
+      ownerId: bandId,
       slug: nanoid.nanoid(NANOID_SIZE),
       title: params.title,
       varyingTempo: params.varyingTempo || null,
@@ -100,6 +103,80 @@ export class SongService {
     song.stemCount = 0;
     song.samples = 0;
     return song;
+  }
+
+  async updateSongByBand(
+    bandId: number,
+    songId: number,
+    newSongInfo: Partial<SongRequestDto>,
+  ): Promise<Song | undefined> {
+    let additionalFields = {};
+    const { bpm, timeSignature } = newSongInfo;
+
+    if (bpm !== undefined && timeSignature !== undefined) {
+      additionalFields = {
+        varyingTempo: null,
+      };
+    } else if (newSongInfo.varyingTempo !== undefined) {
+      additionalFields = {
+        bpm: null,
+        timeSignature: null,
+      };
+    }
+
+    await this.songRepository.update(
+      {
+        id: songId,
+        ownerId: bandId,
+      },
+      {
+        bpm: newSongInfo.bpm,
+        form: newSongInfo.form,
+        timeSignature: newSongInfo.timeSignature,
+        title: newSongInfo.title,
+        varyingTempo: newSongInfo.varyingTempo,
+        ...additionalFields,
+      },
+    );
+
+    return await this.getSongByBand(bandId, songId);
+  }
+
+  async updateSongByBandBySlug(
+    bandId: number,
+    slug: string,
+    newSongInfo: Partial<SongRequestDto>,
+  ): Promise<Song | undefined> {
+    let additionalFields = {};
+    const { bpm, timeSignature } = newSongInfo;
+
+    if (bpm !== undefined && timeSignature !== undefined) {
+      additionalFields = {
+        varyingTempo: null,
+      };
+    } else if (newSongInfo.varyingTempo !== undefined) {
+      additionalFields = {
+        bpm: null,
+        timeSignature: null,
+      };
+    }
+
+    await this.songRepository.update(
+      {
+        slug,
+        ownerId: bandId,
+      },
+      {
+        bpm: newSongInfo.bpm,
+        form: newSongInfo.form,
+        timeSignature: newSongInfo.timeSignature,
+        title: newSongInfo.title,
+        varyingTempo: newSongInfo.varyingTempo,
+        ...additionalFields,
+      },
+    );
+
+    return await this.getSongByBandBySlug(bandId, slug);
   }
 
   async deleteSongByBand(bandId: number, songId: number): Promise<number> {

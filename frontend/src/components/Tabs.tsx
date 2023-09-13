@@ -7,7 +7,7 @@ export const GlissandoTabs = Tabs;
 
 export const GlissandoTabsList = styled(TabsList)(({ theme }) => `
   margin-top: -${theme.spacing(1)};
-  margin-bottom: ${theme.spacing(4)};
+  margin-bottom: ${theme.spacing(2)};
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -21,6 +21,7 @@ export const GlissandoTab = styled(Tab)(({ theme }) => `
   padding: ${theme.spacing(1)} ${theme.spacing(4)};
   border-bottom: ${theme.spacing(0.3)} solid transparent;
   transition: 0.2s;
+  cursor: pointer;
   &:hover {
     background: ${theme.palette.background.light};
     border-bottom-color: ${theme.palette.primary.dark};

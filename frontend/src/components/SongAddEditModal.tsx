@@ -10,6 +10,7 @@ import Modal from './Modal';
 import { GreenButton, RedButton } from './NavbarButton';
 import Slider from './Slider';
 import SliderBox from './SliderBox';
+import SongForm from './SongForm';
 import { GlissandoTab, GlissandoTabPanel, GlissandoTabs, GlissandoTabsList } from './Tabs';
 
 import { useAxios } from '../hooks/useAxios';
@@ -48,6 +49,7 @@ function SongAddEditModal(props: SongAddEditModalProps) {
   const [ title, setTitle ] = useState(props.songData?.title || '');
   const [ tempo, setTempo ] = useState((props.songData?.bpm || 120).toFixed(3).padStart(7, '0'));
   const [ signature, setSignature ] = useState(props.songData?.timeSignature || 4);
+  const [ form, setForm ] = useState(props.songData?.form || []);
   const [ processing, setProcessing ] = useState(false);
   const axios = useAxios();
   const session = useSession();
@@ -75,7 +77,7 @@ function SongAddEditModal(props: SongAddEditModalProps) {
 
   const valid = title.length > 0 && tempo >= '040.000' && !processing;
 
-  const handleAccept = () => {
+  const handleAcceptNew = () => {
     if (!valid) return;
     setProcessing(true);
 
@@ -84,6 +86,41 @@ function SongAddEditModal(props: SongAddEditModalProps) {
       bpm: parseFloat(tempo),
       timeSignature: signature,
       form: [],
+    }).then(() => {
+      queryClient.invalidateQueries(['songs']);
+      setProcessing(false);
+
+      if (props.onCancel) props.onCancel();
+    }).catch((error: AxiosError) => {
+      setProcessing(false);
+
+      if (error.response) {
+        if (error.response.status === 403) {
+          session.invalidateSession();
+        } else {
+          console.error(error);
+          alert((error.response.data as Record<string, string>)['message']);
+        }
+      } else {
+        console.error(error);
+        alert('Nie można dodać utworu! Wystąpił nieznany błąd.');
+      }
+    });
+  };
+
+  const handleAcceptEdit = () => {
+    if (!valid) return;
+    setProcessing(true);
+
+    const signatureAndTempoData = signatureAndTempoDisabled ? {} : {
+      bpm: parseFloat(tempo),
+      timeSignature: signature,
+    };
+
+    axios.patch(`/api/songs/by-slug/${props.songData!.slug}`, {
+      title: title,
+      form: form,
+      ...signatureAndTempoData
     }).then(() => {
       queryClient.invalidateQueries(['songs']);
       setProcessing(false);
@@ -138,7 +175,7 @@ function SongAddEditModal(props: SongAddEditModalProps) {
     <Modal open={props.open} onBlur={props.onCancel} title={isEdit ? 'Właściwości utworu' : 'Dodaj nowy utwór'} buttons={() =>
       <>
         <RedButton onClick={props.onCancel}><CloseRoundedIcon />&nbsp;Anuluj</RedButton>&nbsp;&nbsp;
-        <GreenButton onClick={handleAccept} disabled={!valid}>
+        <GreenButton onClick={isEdit ? handleAcceptEdit : handleAcceptNew} disabled={!valid}>
           <CheckRoundedIcon />{ processing ? '\u2022 \u2022 \u2022' : <>&nbsp;Zaakceptuj</> }
         </GreenButton>
       </>
@@ -152,7 +189,9 @@ function SongAddEditModal(props: SongAddEditModalProps) {
             <GlissandoTab value={2}>Forma</GlissandoTab>
           </GlissandoTabsList>
           <GlissandoTabPanel value={1}>{mainPage}</GlissandoTabPanel>
-          <GlissandoTabPanel value={2}>aaa</GlissandoTabPanel>
+          <GlissandoTabPanel value={2}>
+            <SongForm form={form} onUpdate={setForm}/>
+          </GlissandoTabPanel>
         </GlissandoTabs>
       }
     </Modal>

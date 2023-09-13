@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { styled } from '@mui/system';
 
 import EditIcon from '@mui/icons-material/Edit';
@@ -119,6 +119,16 @@ const RoundButton = styled(NormalButton)(({ theme }) => ({
   padding: theme.spacing(1),
 }));
 
+function BpmField() {
+  const [ bpm, setBpm ] = useState('000.000');
+
+  usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
+    setBpm(mixer.getTrackBpm().toFixed(3).padStart(7, '0'));
+  }, []));
+
+  return <>{ bpm }</>;
+}
+
 interface EditorNavbarProps {
   songData: SongData;
   form: FormType;
@@ -127,11 +137,14 @@ interface EditorNavbarProps {
 function EditorNavbar(props: EditorNavbarProps) {
   const [ native, ] = useNative();
   const state = native!.getPlaybackState();
-  const [ bpm, setBpm ] = useState('000.000');
+  const [ modalOpen, setModalOpen ] = useState(false);
 
-  usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
-    setBpm(mixer.getTrackBpm().toFixed(3).padStart(7, '0'));
-  }, []));
+  const modalKey = useRef(1);
+
+  const handleEditClick = () => {
+    ++modalKey.current;
+    setModalOpen(true);
+  };
 
   const handlePrev = () => {
     if (native!.getPlaybackState() === 'stop') {
@@ -189,11 +202,15 @@ function EditorNavbar(props: EditorNavbarProps) {
     native!.toggleMetronome();
   }
 
+  const handleEditCancel = () => {
+    setModalOpen(false);
+  };
+
   return (
     <>
       <Navbar title={props.songData.title} customSeparator={true}>
         &nbsp;&nbsp;
-        <RoundButton title='Właściwości utworu'><EditIcon /></RoundButton>
+        <RoundButton title='Właściwości utworu' onClick={handleEditClick}><EditIcon /></RoundButton>
         <NavbarSeparator />
         <PlaybackControlsContainer>
           <NormalButton title='Poprzednia sekcja' onClick={handlePrev}>
@@ -221,11 +238,12 @@ function EditorNavbar(props: EditorNavbarProps) {
         </FieldWithIcon>
         <span style={{ width: 32 }} />
         <FieldWithIcon iconSrc={BpmIcon} width={4.5} title='Tempo'>
-          { bpm }
+          <BpmField />
         </FieldWithIcon>
         <span style={{ width: 32 }} />
       </Navbar>
-      <SongAddEditModal songData={props.songData}/>
+
+      <SongAddEditModal key={modalKey.current} open={modalOpen} songData={props.songData} onCancel={handleEditCancel}/>
     </>
   );
 }

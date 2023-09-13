@@ -80,7 +80,6 @@ function DeleteStemModal(props: DeleteStemModalProps) {
 
     axios.delete(`/api/songs/by-slug/${props.slug}/stems/${props.stemId}`).then(() => {
       queryClient.invalidateQueries(['songs']);
-      queryClient.invalidateQueries(['songs', props.slug]);
       queryClient.invalidateQueries(['stems', props.slug]);
       setProcessing(false);
 
@@ -161,7 +160,6 @@ function StemMenu(props: StemMenuProps) {
 
   const handleInvalidate = () => {
     queryClient.invalidateQueries(['songs']);
-    queryClient.invalidateQueries(['songs', slug]);
     queryClient.invalidateQueries(['stems', slug]);
   };
 

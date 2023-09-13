@@ -150,7 +150,10 @@ export class StemService implements OnModuleInit {
       },
     );
 
-    return (await this.stemRepository.findOneBy({ id: id })) || undefined;
+    return (
+      (await this.stemRepository.findOneBy({ id: id, songId: song.id })) ||
+      undefined
+    );
   }
 
   async deleteStemForSong(song: Song, id: number): Promise<number> {

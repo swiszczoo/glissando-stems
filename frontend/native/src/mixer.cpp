@@ -166,6 +166,11 @@ double Mixer::track_bpm() const
     return _tempo->current_bpm(_playback_position);
 }
 
+uint32_t Mixer::track_time_signature() const
+{
+    return _tempo->current_time_signature(_playback_position);
+}
+
 double Mixer::left_channel_out_db() const
 {
     return _master_level->left_db();

@@ -27,6 +27,9 @@ export class Song {
   })
   public owner: Band;
 
+  @Column('int', { nullable: true })
+  public ownerId: number;
+
   @Column('varchar', { nullable: false, length: 255 })
   public title: string;
 

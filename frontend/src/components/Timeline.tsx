@@ -117,8 +117,8 @@ function FormMarker(props: FormMarkerProps) {
   )
 }
 
-function calcBarPositionsFromBpm(bpm: number, sampleRate: number, totalSamples: number): number[] {
-  const samplesPerBar = sampleRate * 60 / bpm * 4;
+function calcBarPositionsFromBpm(bpm: number, sampleRate: number, timeSig: number, totalSamples: number): number[] {
+  const samplesPerBar = sampleRate * 60 / bpm * timeSig;
   const bars: number[] = [];
   let position = 0;
 
@@ -168,14 +168,15 @@ function Timeline(props: TimelineProps) {
   const bpm = native!.getTrackBpm();
   const sampleRate = native!.getSampleRate();
   const trackLength = native!.getTrackLength();
+  const timeSignature = native!.getTrackTimeSignature();
 
   const barPositions = useMemo(() => {
     if (!props.tempo) {
-      return calcBarPositionsFromBpm(bpm, sampleRate, trackLength);
+      return calcBarPositionsFromBpm(bpm, sampleRate, timeSignature, trackLength);
     } else {
       return calcBarPositionsForVaryingBpm(props.tempo, trackLength);
     }
-  }, [bpm, trackLength, sampleRate, props.tempo]);
+  }, [bpm, trackLength, sampleRate, timeSignature, props.tempo]);
 
   const barLines = useMemo(() => {
     return barPositions.map((position, index) => {

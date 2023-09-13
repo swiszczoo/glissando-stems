@@ -9,13 +9,13 @@ import {
   MaxLength,
   Min,
   ValidateNested,
-
 } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 import { FormEntityDto } from './form-entity.dto';
 import { VaryingTempoEntityDto } from './varying-tempo-entity.dto';
 
-export class SongCreateDto {
+export class SongRequestDto {
   @IsNotEmpty()
   @IsString()
   @MaxLength(255)
@@ -41,3 +41,4 @@ export class SongCreateDto {
   @ArrayMinSize(2)
   public varyingTempo?: VaryingTempoEntityDto[];
 }
+export class PatchSongRequestDto extends PartialType(SongRequestDto) {}

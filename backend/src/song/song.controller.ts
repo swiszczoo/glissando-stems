@@ -26,7 +26,7 @@ import { SongService } from './song.service';
 import { Role } from '../common/role.enum';
 import { Roles } from '../common/roles.decorator';
 
-import { SongCreateDto } from './dto/song-create.dto';
+import { PatchSongRequestDto, SongRequestDto } from './dto/song-request.dto';
 import { SongResponseDto } from './dto/song-response.dto';
 import { StemFailedResponseDto } from './dto/stem-failed-response.dto';
 import { StemProcessingResponseDto } from './dto/stem-processing-response.dto';
@@ -48,16 +48,23 @@ export class SongController {
     private stemService: StemService,
   ) {}
 
-  private validateMetadata(dto: SongCreateDto): void {
+  private validateMetadata(
+    dto: PatchSongRequestDto,
+    nothingValid: boolean,
+  ): void {
     const onetime = !!(dto.bpm && dto.timeSignature) ? 1 : 0;
     const varying = !!dto.varyingTempo ? 1 : 0;
+
+    if (!onetime && !varying && nothingValid) {
+      return;
+    }
 
     if (!(onetime ^ varying)) {
       throw this.exceptions.EITHER_VARYING_OR_STATIC;
     }
   }
 
-  private validateForm(dto: SongCreateDto): void {
+  private validateForm(dto: SongRequestDto): void {
     if (dto.form.length === 0) return;
 
     let previous = dto.form[0].bar;
@@ -70,7 +77,7 @@ export class SongController {
     }
   }
 
-  private validateTempo(dto: SongCreateDto): void {
+  private validateTempo(dto: SongRequestDto): void {
     if (!dto.varyingTempo || dto.varyingTempo.length === 0) return;
 
     let previous = dto.varyingTempo[0].sample;
@@ -83,10 +90,14 @@ export class SongController {
     }
   }
 
-  private validateSongDto(dto: SongCreateDto): void {
-    this.validateMetadata(dto);
-    this.validateForm(dto);
-    this.validateTempo(dto);
+  private validateSongDto(dto: PatchSongRequestDto, update: boolean): void {
+    this.validateMetadata(dto, update);
+    if (dto.bpm) {
+      this.validateForm(dto as SongRequestDto);
+    }
+    if (dto.varyingTempo) {
+      this.validateTempo(dto as SongRequestDto);
+    }
   }
 
   @Get()
@@ -142,11 +153,53 @@ export class SongController {
   @Roles(Role.User, Role.Admin)
   async create(
     @Session() session: SessionData,
-    @Body() params: SongCreateDto,
+    @Body() params: SongRequestDto,
   ): Promise<SongResponseDto> {
-    this.validateSongDto(params);
+    this.validateSongDto(params, false);
 
     const song = await this.service.createSongByBand(session.bandId, params);
+
+    return SongResponseDto.entityToDto(
+      this.service.samplesToSeconds.bind(this.service),
+      song,
+    );
+  }
+
+  @Patch(':id')
+  @Roles(Role.User, Role.Admin)
+  async updateOne(
+    @Session() session: SessionData,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() params: PatchSongRequestDto,
+  ): Promise<SongResponseDto> {
+    this.validateSongDto(params, true);
+
+    const song = await this.service.updateSongByBand(
+      session.bandId,
+      id,
+      params,
+    );
+
+    return SongResponseDto.entityToDto(
+      this.service.samplesToSeconds.bind(this.service),
+      song,
+    );
+  }
+
+  @Patch('by-slug/:slug')
+  @Roles(Role.User, Role.Admin)
+  async updateOneBySlug(
+    @Session() session: SessionData,
+    @Param('slug') slug: string,
+    @Body() params: PatchSongRequestDto,
+  ): Promise<SongResponseDto> {
+    this.validateSongDto(params, true);
+
+    const song = await this.service.updateSongByBandBySlug(
+      session.bandId,
+      slug,
+      params,
+    );
 
     return SongResponseDto.entityToDto(
       this.service.samplesToSeconds.bind(this.service),

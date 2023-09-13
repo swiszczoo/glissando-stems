@@ -49,6 +49,7 @@ public:
     void set_track_bpm(double bpm, uint32_t time_sig_numerator = 4);
     void set_track_varying_bpm(const std::vector<tempo_tag>& tags);
     double track_bpm() const;
+    uint32_t track_time_signature() const;
     double left_channel_out_db() const;
     double right_channel_out_db() const;
 

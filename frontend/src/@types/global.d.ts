@@ -42,6 +42,7 @@ interface NativeMixer {
   setTrackBpm: (bpm: number, timeSignatureNumerator?: number) => void;
   setTrackVaryingBpm: (tags: TempoType[]) => void;
   getTrackBpm: () => number;
+  getTrackTimeSignature: () => number;
   getLeftChannelOutDb: () => number;
   getRightChannelOutDb: () => number;
   setTrackLength: (samples: number) => void;
