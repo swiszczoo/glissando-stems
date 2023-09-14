@@ -42,10 +42,9 @@ export class StemService implements OnModuleInit {
 
   private runStemConversion(
     stem: Stem,
+    stemName: string,
     pathToUploadedFile: string,
   ): [string, number] {
-    const stemName = nanoid.nanoid(NANOID_SIZE);
-
     const args = [
       'scripts/process-file.sh',
       pathToUploadedFile,
@@ -70,8 +69,6 @@ export class StemService implements OnModuleInit {
         processingHostname: null,
         processingPid: null,
         status: StemStatus.READY,
-        location: `${stemName}.oga`,
-        hqLocation: `${stemName}.flac`,
         samples: sampleCount,
       });
     };
@@ -119,11 +116,18 @@ export class StemService implements OnModuleInit {
     });
 
     const newStem = await this.stemRepository.save(stem);
+    const stemName = nanoid.nanoid(NANOID_SIZE);
 
-    const [hostname, pid] = this.runStemConversion(newStem, pathToUploadedFile);
+    const [hostname, pid] = this.runStemConversion(
+      newStem,
+      stemName,
+      pathToUploadedFile,
+    );
     newStem.status = StemStatus.PROCESSING;
     newStem.processingHostname = hostname;
     newStem.processingPid = pid;
+    newStem.location = `${stemName}.oga`;
+    newStem.hqLocation = `${stemName}.flac`;
 
     await this.stemRepository.save(newStem);
 

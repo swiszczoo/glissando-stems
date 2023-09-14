@@ -1,4 +1,4 @@
-import { DynamicModule, Global, Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ConfigService } from '@nestjs/config';
@@ -7,7 +7,6 @@ import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-clas
 import { Config } from '../config';
 import '../virtual-column-polyfill';
 
-@Global()
 @Module({
   imports: [],
 })

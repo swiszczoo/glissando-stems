@@ -7,6 +7,7 @@ import * as mime from 'mime-types';
 import { extname } from 'path';
 
 import { DatabaseModule } from '../database/database.module';
+import { S3StorageModule } from '../storage-s3/storage-s3.module';
 
 import { StemService } from './stem.service';
 import { SongController } from './song.controller';
@@ -45,6 +46,18 @@ import { Config } from '../config';
       }),
     }),
     ScheduleModule.forRoot(),
+    S3StorageModule.forRootAsync({
+      useFactory: (configService: ConfigService<Config>) => ({
+        enabled: configService.get('S3_DRIVER_ENABLED'),
+        createBucketOnStart: configService.get('S3_CREATE_BUCKET_ON_START'),
+        accessKey: configService.get('S3_ACCESS_KEY_ID'),
+        secretKey: configService.get('S3_SECRET_ACCESS_KEY'),
+        bucketName: configService.get('S3_BUCKET_NAME'),
+        endpointUrl: configService.get('S3_ENDPOINT_URL'),
+        forcePathStyle: configService.get('S3_FORCE_PATH_STYLE'),
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [SongController],
   providers: [SongExceptions, StemService, SongService],

@@ -66,5 +66,16 @@ services:
     depends_on:
       - mariadb
 
+  minio-s3:
+    container_name: glissando_minio_dev
+    command: server /data --console-address ":9001"
+    image: minio/minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - minio:/data
+
 volumes:
   mariadb:
+  minio:
