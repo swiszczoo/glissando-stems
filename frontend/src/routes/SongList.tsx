@@ -245,7 +245,7 @@ function SongListRoute() {
   return (
     <SolidBackgroundFrame>
       <Navbar title={session.bandName || ''}>
-        <GreenButton onClick={handleAddModalOpen}><AddIcon />&nbsp;Dodaj nowy utwór</GreenButton>
+        <GreenButton onClick={handleAddModalOpen}><AddIcon />&nbsp;Stwórz utwór</GreenButton>
         <span style={{ width: 32 }} />
       </Navbar>
       <MainSection>

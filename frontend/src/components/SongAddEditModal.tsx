@@ -172,7 +172,7 @@ function SongAddEditModal(props: SongAddEditModalProps) {
   );
 
   return (
-    <Modal open={props.open} onBlur={props.onCancel} title={isEdit ? 'Właściwości utworu' : 'Dodaj nowy utwór'} buttons={() =>
+    <Modal open={props.open} onBlur={props.onCancel} title={isEdit ? 'Właściwości utworu' : 'Stwórz utwór'} buttons={() =>
       <>
         <RedButton onClick={props.onCancel}><CloseRoundedIcon />&nbsp;Anuluj</RedButton>&nbsp;&nbsp;
         <GreenButton onClick={isEdit ? handleAcceptEdit : handleAcceptNew} disabled={!valid}>

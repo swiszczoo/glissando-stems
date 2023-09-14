@@ -16,14 +16,14 @@ export const WasmContext = createContext<WasmContextType>({
 });
 
 interface WasmContextType {
-  module: EmscriptenModule | undefined,
+  module: GlissandoModule | undefined,
   monotonic: number;
   ensureModuleIsLoaded: () => boolean,
   invalidateState: () => void,
 }
 
 const WasmContextProvider = memo(function (props: React.PropsWithChildren<object>) {
-  const [ instance, setInstance ] = useState<EmscriptenModule | undefined>(window.Module);
+  const [ instance, setInstance ] = useState<GlissandoModule | undefined>(window.Module);
   const [ inv, setInv ] = useState(0);
   const moduleIsLoading = useRef<boolean>(false);
 
@@ -35,7 +35,7 @@ const WasmContextProvider = memo(function (props: React.PropsWithChildren<object
 
   const contextValue: WasmContextType = useMemo(() => {
     const loadModule = () => {
-      window.Module = {} as EmscriptenModule;
+      window.Module = {} as GlissandoModule;
       window.Module.locateFile = (url, ) => url;
       
       moduleIsLoading.current = true;

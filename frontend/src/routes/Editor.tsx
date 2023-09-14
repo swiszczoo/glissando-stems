@@ -1,4 +1,5 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
+import { AxiosError } from 'axios';
 import { useParams } from 'react-router';
 import { styled } from '@mui/system';
 import { useQuery } from '@tanstack/react-query';
@@ -13,8 +14,8 @@ import SolidBackgroundFrame from '../components/SolidBackgroundFrame';
 
 import { useAxios } from '../hooks/useAxios';
 import { useNative } from '../hooks/useNative';
-import { usePlaybackUpdate } from '../hooks/usePlaybackUpdate';
-// import { useSession } from '../hooks/useSession';
+
+import NotFoundRoute from './NotFound';
 
 
 export interface SongData {
@@ -63,7 +64,7 @@ function LoaderContent() {
   );
 }
 
-interface PlaybackStateChangeDetectorProps {
+/*interface PlaybackStateChangeDetectorProps {
   currentState: string;
 }
 
@@ -83,9 +84,9 @@ function PlaybackStateChangeDetector(props: PlaybackStateChangeDetectorProps) {
   }, [currentState, invalidateNative]));
 
   return <></>;
-}
+}*/
 
-interface MediaSessionHandlerProps {
+/*interface MediaSessionHandlerProps {
   songTitle: string;
   bandName: string;
 }
@@ -125,7 +126,7 @@ function MediaSessionHandler(props: MediaSessionHandlerProps) {
   });
 
   return <></>;
-}
+}*/
 
 interface EditorContentProps {
   song: SongData;
@@ -206,9 +207,15 @@ function EditorRoute() {
     || stemQuery.status !== 'success'
   );
 
+  const is404 = (
+    (songQuery.error as AxiosError)?.response?.status === 404 ||
+    (stemQuery.error as AxiosError)?.response?.status === 404
+  );
+
   return (
     <SolidBackgroundFrame>
-      { loading && <LoaderContent /> }
+      { loading && !is404 && <LoaderContent /> }
+      { loading && is404 && <NotFoundRoute /> }
       { !loading && <EditorContent key={slug} song={songQuery.data} stems={stemQuery.data}/> }
     </SolidBackgroundFrame>
   );

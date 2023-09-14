@@ -3,7 +3,13 @@ interface Window {
   _wasmInitialized?: () => void;
   _invalidateModuleContext?: () => void;
   
-  Module: EmscriptenModule;
+  Module: GlissandoModule;
+}
+
+interface GlissandoModule extends EmscriptenModule {
+  getGlobalMixer: () => NativeMixer;
+  VectorTempoTag: typeof CppVector<TempoTag>;
+  VectorStemInfo: typeof CppVector<StemInfo>;
 }
 
 // Corresponding definition in frontend/native/include/stem-manager.h
@@ -16,10 +22,32 @@ interface StemInfo {
   pan: number;
 }
 
+// Corresponding definition in frontend/native/include/tempo.h
 interface SongPosition {
   bar: number;
   step: number;
   tick: number;
+}
+
+// Corresponding definition in frontend/native/include/tempo.h
+interface TempoTag {
+  sample: number;
+  bar: number;
+  timeSignatureNumerator: number;
+}
+
+declare class EmscriptenDisposable {
+  delete: () => void;
+}
+
+declare class CppVector<T> extends EmscriptenDisposable {
+  constructor();
+
+  get: (index: number) => T;
+  push_back: (element: T) => void;
+  resize: (newSize: number, element: T) => void;
+  set: (index: number, value: T) => void;
+  size: () => number;
 }
 
 interface NativeMixer {
@@ -40,7 +68,7 @@ interface NativeMixer {
   setMetronomeGainDb: (decibels: number) => void;
   getMetronomeGainDb: () => number;
   setTrackBpm: (bpm: number, timeSignatureNumerator?: number) => void;
-  setTrackVaryingBpm: (tags: TempoType[]) => void;
+  setTrackVaryingBpm: (tags: CppVector<TempoTag>) => void;
   getTrackBpm: () => number;
   getTrackTimeSignature: () => number;
   getLeftChannelOutDb: () => number;
@@ -48,7 +76,7 @@ interface NativeMixer {
   setTrackLength: (samples: number) => void;
   getTrackLength: () => number;
   getStemCount: () => number;
-  updateStemInfo: (info: StemInfo[]) => void;
+  updateStemInfo: (info: CppVector<StemInfo>) => void;
   getWaveformOrdinal: (stemId: number) => number;
   getWaveformDataUri: (stemId: number) => string;
   toggleMute: (stemId: number) => void;
