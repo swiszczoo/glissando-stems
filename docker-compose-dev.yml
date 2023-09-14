@@ -16,6 +16,7 @@ services:
       - 3000:3000
     depends_on:
       - mariadb
+      - minio-s3
   
   frontend-dev:
     container_name: glissando_frontend_dev

@@ -1,10 +1,14 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   ListBucketsCommand,
   PutBucketPolicyCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
+
+import * as fs from 'fs';
 
 import {
   MODULE_OPTIONS_TOKEN,
@@ -83,6 +87,7 @@ export class S3StorageService implements OnModuleInit {
       endpoint: this.options.endpointUrl,
       region: 'not-used',
       forcePathStyle: true,
+      retryMode: 'standard',
     });
 
     try {
@@ -97,6 +102,52 @@ export class S3StorageService implements OnModuleInit {
 
     if (this.options.createBucketOnStart) {
       await this.initCreateBucket();
+    }
+  }
+
+  isEnabled(): boolean {
+    return this.options.enabled && this.s3 !== null;
+  }
+
+  async uploadFile(path: string, key: string, mimeType: string): Promise<void> {
+    const fstream = fs.createReadStream(path);
+
+    const upload = new Upload({
+      client: this.s3,
+      params: {
+        Bucket: this.options.bucketName,
+        Key: key,
+        Body: fstream,
+        ContentType: mimeType,
+        ContentDisposition: 'attachment',
+      },
+      leavePartsOnError: true,
+    });
+
+    try {
+      await upload.done();
+      fstream.close();
+    } catch (e) {
+      fstream.close();
+      throw e;
+    }
+  }
+
+  async deleteFile(key: string): Promise<boolean> {
+    const command = new DeleteObjectCommand({
+      Bucket: this.options.bucketName,
+      Key: key,
+    });
+
+    try {
+      await this.s3.send(command);
+      return true;
+    } catch (e) {
+      this.logger.error(
+        `Could not remove key "${key}" from bucket "${this.options.bucketName}"`,
+      );
+      this.logger.error(e);
+      return false;
     }
   }
 }

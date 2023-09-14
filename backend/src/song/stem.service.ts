@@ -11,6 +11,7 @@ import { hostname } from 'os';
 import { promisify } from 'util';
 
 import { Config } from '../config';
+import { S3StorageService } from '../storage-s3/storage-s3.service';
 
 import { Song } from './entities/song.entity';
 import { Stem, StemStatus } from './entities/stem.entity';
@@ -24,6 +25,7 @@ interface CreateStemParams {
 }
 
 const NANOID_SIZE = 70;
+const S3_RETRY_COUNT = 2;
 
 @Injectable()
 export class StemService implements OnModuleInit {
@@ -32,6 +34,7 @@ export class StemService implements OnModuleInit {
   constructor(
     @InjectRepository(Stem) private stemRepository: Repository<Stem>,
     private configService: ConfigService<Config>,
+    private s3Service: S3StorageService,
   ) {}
 
   async onModuleInit() {
@@ -40,15 +43,91 @@ export class StemService implements OnModuleInit {
     await this.removeOldDeletedAndOrphanedStemFiles();
   }
 
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async uploadSingleFileToS3WithRetry(
+    key: string,
+    path: string,
+    mimeType: string,
+    retryCount: number,
+  ): Promise<void> {
+    for (let i = 0; i < retryCount; i++) {
+      try {
+        this.s3Service.uploadFile(path, key, mimeType);
+        return;
+      } catch (e) {
+        if (i + 1 === retryCount) {
+          throw e;
+        }
+        await this.delay(1000);
+      }
+    }
+  }
+
+  private async uploadStemToS3(
+    stemName: string,
+    stemPath: string,
+  ): Promise<void> {
+    const normalKey = `${stemName}.oga`;
+    const hqKey = `${stemName}.flac`;
+    const normalPath = `${stemPath}.oga`;
+    const hqPath = `${stemPath}.flac`;
+
+    const rmfile = promisify(rm);
+
+    try {
+      await this.uploadSingleFileToS3WithRetry(
+        normalKey,
+        normalPath,
+        'audio/ogg',
+        S3_RETRY_COUNT,
+      );
+
+      try {
+        await this.uploadSingleFileToS3WithRetry(
+          hqKey,
+          hqPath,
+          'audio/flac',
+          S3_RETRY_COUNT,
+        );
+      } catch (e) {
+        await this.s3Service.deleteFile(normalKey);
+        throw e;
+      }
+
+      try {
+        await rmfile(normalPath);
+      } catch {}
+      try {
+        await rmfile(hqPath);
+      } catch {}
+    } catch (e) {
+      try {
+        await rmfile(normalPath);
+      } catch {}
+      try {
+        await rmfile(hqPath);
+      } catch {}
+
+      throw e;
+    }
+  }
+
   private runStemConversion(
     stem: Stem,
     stemName: string,
     pathToUploadedFile: string,
   ): [string, number] {
+    const stemPath = `${this.configService.get(
+      'STEM_SAVE_FOLDER',
+    )}/${stemName}`;
+
     const args = [
       'scripts/process-file.sh',
       pathToUploadedFile,
-      `${this.configService.get('STEM_SAVE_FOLDER')}/${stemName}`,
+      stemPath,
       this.configService.get('PROJECT_SAMPLE_RATE'),
     ];
 
@@ -64,12 +143,13 @@ export class StemService implements OnModuleInit {
       });
     };
 
-    const handleSuccess = async (sampleCount: number) => {
+    const handleSuccess = async (sampleCount: number, local: boolean) => {
       await this.stemRepository.update(stem.id, {
         processingHostname: null,
         processingPid: null,
         status: StemStatus.READY,
         samples: sampleCount,
+        local,
       });
     };
 
@@ -91,7 +171,19 @@ export class StemService implements OnModuleInit {
         }
 
         const sampleCount = parseInt(stdout.trim());
-        handleSuccess(sampleCount);
+
+        try {
+          if (this.s3Service.isEnabled()) {
+            this.uploadStemToS3(stemName, stemPath);
+          }
+
+          handleSuccess(sampleCount, !this.s3Service.isEnabled());
+        } catch (e) {
+          this.logger.error('S3 file upload failed:');
+          this.logger.error(e);
+
+          handleFail();
+        }
       },
     );
 
@@ -195,7 +287,6 @@ export class StemService implements OnModuleInit {
   async removeOldDeletedAndOrphanedStemFiles() {
     const stems = await this.stemRepository.findBy([
       {
-        local: true,
         status: StemStatus.DELETED,
       },
       {
@@ -204,28 +295,60 @@ export class StemService implements OnModuleInit {
     ]);
 
     const rmfile = promisify(rm);
+    const removedIds = [];
     let removedCount = 0;
 
     for (const stem of stems) {
-      const normalPath = `${this.configService.get('STEM_SAVE_FOLDER')}/${
-        stem.location
-      }`;
-      const hqPath = `${this.configService.get('STEM_SAVE_FOLDER')}/${
-        stem.hqLocation
-      }`;
+      if (stem.local) {
+        const normalPath = `${this.configService.get('STEM_SAVE_FOLDER')}/${
+          stem.location
+        }`;
+        const hqPath = `${this.configService.get('STEM_SAVE_FOLDER')}/${
+          stem.hqLocation
+        }`;
 
-      try {
-        await rmfile(normalPath);
-        ++removedCount;
-      } catch {
-        this.logger.warn(`Could not remove stem data file at ${normalPath}`);
-      }
+        try {
+          await rmfile(normalPath);
+          ++removedCount;
+        } catch {
+          this.logger.warn(`Could not remove stem data file at ${normalPath}`);
+        }
 
-      try {
-        await rmfile(hqPath);
-        ++removedCount;
-      } catch {
-        this.logger.warn(`Could not remove stem data file at ${hqPath}`);
+        try {
+          await rmfile(hqPath);
+          ++removedCount;
+        } catch {
+          this.logger.warn(`Could not remove stem data file at ${hqPath}`);
+        }
+
+        removedIds.push(stem.id);
+      } else {
+        let normalSuccess = false;
+        let hqSuccess = false;
+
+        try {
+          await this.s3Service.deleteFile(stem.location);
+          normalSuccess = true;
+          ++removedCount;
+        } catch {
+          this.logger.warn(
+            `Could not remove stem remote data at key ${stem.location}`,
+          );
+        }
+
+        try {
+          await this.s3Service.deleteFile(stem.hqLocation);
+          hqSuccess = true;
+          ++removedCount;
+        } catch {
+          this.logger.warn(
+            `Could not remove stem remote data at key ${stem.hqLocation}`,
+          );
+        }
+
+        if (normalSuccess && hqSuccess) {
+          removedIds.push(stem.id);
+        }
       }
     }
 
@@ -235,7 +358,7 @@ export class StemService implements OnModuleInit {
 
     if (stems.length > 0) {
       await this.stemRepository.delete({
-        id: In(stems.map((stem) => stem.id)),
+        id: In(removedIds),
       });
     }
   }
