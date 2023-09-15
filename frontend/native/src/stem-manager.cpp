@@ -9,12 +9,14 @@
 #include <emscripten/fetch.h>
 
 #include <cassert>
+#include <chrono>
 #include <cstdio>
 #include <thread>
 #include <unordered_set>
 
 
 const float StemManager::SHORT_TO_FLOAT = 1 / 32768.f;
+const int StemManager::STEM_DOWNLOAD_RETRY_COUNT = 4;
 using std::nullopt;
 
 StemManager::StemManager()
@@ -301,26 +303,51 @@ void StemManager::run_waveform_processing(StemEntryPtr stem, uint32_t prev_ordin
 
 void StemManager::process_stem(StemEntryPtr stem)
 {
-    uint32_t sid = stem->info.id;
+    using namespace std::chrono_literals;
 
-    printf("Stem %u: Downloading \"%s\"\n", sid, stem->info.path.c_str());
+    uint32_t sid = stem->info.id;
+    emscripten_fetch_t* fetch = nullptr;
 
     emscripten_fetch_attr_t attr;
     emscripten_fetch_attr_init(&attr);
     strcpy(attr.requestMethod, "GET");
     attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
-    emscripten_fetch_t* fetch = emscripten_fetch(&attr, stem->info.path.c_str());
 
-    if (fetch->status < 200 || fetch->status > 299) {
-        fprintf(stderr, "Stem %u: Download failed!\n", sid);
+    for (int approach = 0; approach < STEM_DOWNLOAD_RETRY_COUNT; ++approach) {
+        printf("Stem %u: Downloading \"%s\"\n", sid, stem->info.path.c_str());
 
-        stem->error = true;
-        return;
-    }
+        fetch = emscripten_fetch(&attr, stem->info.path.c_str());
 
-    if (stem->deleted) {
-        emscripten_fetch_close(fetch);
-        return;
+        if (fetch->status < 200 || fetch->status > 299) {
+            // If download failed...
+
+            fprintf(stderr, "Stem %u: Download failed! Retrying %d more time(s)...\n", 
+                sid, STEM_DOWNLOAD_RETRY_COUNT - approach - 1);
+            emscripten_fetch_close(fetch);
+
+            if (approach + 1 == STEM_DOWNLOAD_RETRY_COUNT) {
+                fprintf(stderr, "Stem %u: Download failed completely!\n", sid);
+                stem->error = true;
+
+                return;
+            }
+
+            // Wait before next download try
+            std::this_thread::sleep_for(3s);
+
+            if (stem->deleted) {
+                return;
+            }
+        } else {
+            // If download was successful...
+
+            if (stem->deleted) {
+                emscripten_fetch_close(fetch);
+                return;
+            }
+
+            break;
+        }
     }
 
     printf("Stem %u: Download finished. Got %llu bytes. Starting vorbis decoder...\n", 

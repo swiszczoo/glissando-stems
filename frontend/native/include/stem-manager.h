@@ -73,6 +73,7 @@ private:
     using StemEntryPtr = std::shared_ptr<StemEntry>;
 
     static const float SHORT_TO_FLOAT;
+    static const int STEM_DOWNLOAD_RETRY_COUNT;
 
     /*
      * Locking strategy: because concurrent reads from STL containers are
