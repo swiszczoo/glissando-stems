@@ -156,9 +156,9 @@ export class StemService implements OnModuleInit {
     const process = execFile(
       '/bin/sh',
       args,
-      (error: ExecFileException, stdout: string, stderr: string) => {
+      async (error: ExecFileException, stdout: string, stderr: string) => {
         if (error) {
-          handleFail();
+          await handleFail();
 
           if (error.code) {
             this.logger.error(
@@ -174,15 +174,15 @@ export class StemService implements OnModuleInit {
 
         try {
           if (this.s3Service.isEnabled()) {
-            this.uploadStemToS3(stemName, stemPath);
+            await this.uploadStemToS3(stemName, stemPath);
           }
 
-          handleSuccess(sampleCount, !this.s3Service.isEnabled());
+          await handleSuccess(sampleCount, !this.s3Service.isEnabled());
         } catch (e) {
           this.logger.error('S3 file upload failed:');
           this.logger.error(e);
 
-          handleFail();
+          await handleFail();
         }
       },
     );
