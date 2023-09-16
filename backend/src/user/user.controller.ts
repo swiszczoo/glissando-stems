@@ -1,4 +1,4 @@
-import { Body, Get, Controller, Post, Session } from '@nestjs/common';
+import { Body, Get, Controller, Post, Session, Put } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { promisify } from 'util';
 
@@ -7,7 +7,8 @@ import { SessionData } from '../session';
 import { UserExceptions } from './user.exceptions';
 import { UserService } from './user.service';
 
-import { LoginParamsDto } from './dto/login-params.dto';
+import { ChangePasswordRequestDto } from './dto/change-password-request.dto';
+import { LoginRequestDto } from './dto/login-request.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { MeBandResponseDto } from './dto/me-band-response.dto';
 import { MeResponseDto } from './dto/me-response.dto';
@@ -26,7 +27,7 @@ export class UserController {
 
   @Post('login')
   async login(
-    @Body() params: LoginParamsDto,
+    @Body() params: LoginRequestDto,
     @Session() session: SessionData,
   ): Promise<LoginResponseDto> {
     const account = await this.service.verifyLoginAndPassword(
@@ -98,6 +99,23 @@ export class UserController {
       };
     } catch {
       throw this.exceptions.UNKNOWN_ERROR;
+    }
+  }
+
+  @Put('me/password')
+  @Roles(Role.User, Role.Admin)
+  async changePassword(
+    @Session() session: SessionData,
+    @Body() params: ChangePasswordRequestDto,
+  ): Promise<void> {
+    const result = await this.service.changeUserPassword(
+      session.userId,
+      params.currentPassword,
+      params.newPassword,
+    );
+
+    if (!result) {
+      throw this.exceptions.INVALID_CURRENT_PASSWORD;
     }
   }
 }

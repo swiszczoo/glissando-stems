@@ -37,6 +37,7 @@ const PrimaryBar = styled('div')(({ theme }) => ({
   userSelect: 'none',
   zIndex: 1,
   letterSpacing: -1,
+  transform: 'translateX(-1.5px)',
   '&.plus100': {
     letterSpacing: -1.5,
   },
@@ -59,6 +60,7 @@ const SecondaryBar = styled('div')(({ theme }) => ({
   borderLeft: `2px solid ${theme.palette.primary.dark}`,
   pointerEvents: 'none',
   zIndex: 0,
+  transform: 'translateX(-1px)',
 }));
 
 const FormMarkerBar = styled('div')(({ theme }) => ({
@@ -70,6 +72,7 @@ const FormMarkerBar = styled('div')(({ theme }) => ({
   userSelect: 'none',
   zIndex: 2,
   boxShadow: `0 -21px 5px 3px ${theme.palette.background.main}`,
+  transform: 'translateX(-1.5px)',
 }));
 
 const FormMarkerFlag = styled('div')(({ theme }) => ({

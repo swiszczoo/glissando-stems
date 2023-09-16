@@ -1,9 +1,11 @@
+import { useRef, useState } from 'react';
 import { styled } from "@mui/system";
 
 import { useAxios } from "../hooks/useAxios";
 import { useSession } from "../hooks/useSession";
 
 import Avatar from "./Avatar";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const NavbarFrame = styled('nav')(({ theme }) => ({
   width: '100%',
@@ -36,6 +38,8 @@ interface NavbarProps {
 function Navbar(props: React.PropsWithChildren<NavbarProps>) {
   const session = useSession();
   const axios = useAxios();
+  const modalKey = useRef(1);
+  const [ modalOpen, setModalOpen ] = useState(false);
 
   const handleLogout = () => {
     axios.post('/api/user/logout').then(() => {
@@ -44,18 +48,31 @@ function Navbar(props: React.PropsWithChildren<NavbarProps>) {
       session.invalidateSession();
     });
   };
+
+  const handlePasswordChange = () => {
+    ++modalKey.current;
+    setModalOpen(true);
+  };
+
+  const handlePasswordCancel = () => {
+    setModalOpen(false);
+  }
   
   return (
-    <NavbarFrame>
-      <NavbarTitle>{props.title}</NavbarTitle>
-      { !props.customSeparator && <NavbarSeparator /> }
-      { props.children }
-      <Avatar 
-        userFirstName={session.firstName || ''} 
-        userEmail={session.email || ''}
-        username={session.login || ''} 
-        onLogout={handleLogout} />
-    </NavbarFrame>
+    <>
+      <NavbarFrame>
+        <NavbarTitle>{props.title}</NavbarTitle>
+        { !props.customSeparator && <NavbarSeparator /> }
+        { props.children }
+        <Avatar 
+          userFirstName={session.firstName || ''} 
+          userEmail={session.email || ''}
+          username={session.login || ''} 
+          onLogout={handleLogout}
+          onPasswordChange={handlePasswordChange} />
+      </NavbarFrame>
+      <ChangePasswordModal open={modalOpen} key={modalKey.current} onBlur={handlePasswordCancel}/>
+    </>
   );
 }
 

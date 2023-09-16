@@ -13,7 +13,7 @@ import PeakMeter from '../components/PeakMeter';
 import SolidBackgroundFrame from '../components/SolidBackgroundFrame';
 
 import { useAxios } from '../hooks/useAxios';
-import { useNative } from '../hooks/useNative';
+import { useNative, useNativeLazy } from '../hooks/useNative';
 
 import NotFoundRoute from './NotFound';
 
@@ -64,28 +64,6 @@ function LoaderContent() {
   );
 }
 
-/*interface PlaybackStateChangeDetectorProps {
-  currentState: string;
-}
-
-function PlaybackStateChangeDetector(props: PlaybackStateChangeDetectorProps) {
-  const [ , invalidateNative ] = useNative();
-  const { currentState } = props;
-
-  usePlaybackUpdate(useCallback((mixer: NativeMixer) => {
-    const playbackState = mixer.getPlaybackState();
-    if (playbackState != currentState) {
-      invalidateNative();
-      
-      if (playbackState === 'stop') {
-        setTimeout(() => window.audioContext?.suspend(), 100);
-      }
-    }
-  }, [currentState, invalidateNative]));
-
-  return <></>;
-}*/
-
 /*interface MediaSessionHandlerProps {
   songTitle: string;
   bandName: string;
@@ -128,6 +106,39 @@ function MediaSessionHandler(props: MediaSessionHandlerProps) {
   return <></>;
 }*/
 
+function KeyboardHandler() {
+  const [ native, ] = useNativeLazy();
+
+  useEffect(() => {
+    const handleSpacePress = () => {
+      if (!native) return;
+  
+      const playbackState = native.getPlaybackState();
+      if (playbackState === 'play') {
+        native.pause();
+      } else {
+        native.play();
+      }
+    };
+
+    const handler = (ev: KeyboardEvent) => {
+      if (ev.target !== document.body) {
+        return;
+      }
+
+      switch (ev.key) {
+        case ' ': handleSpacePress(); break;
+      }
+    };
+
+
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [native]);
+
+  return <></>;
+}
+
 interface EditorContentProps {
   song: SongData;
   stems: StemData[];
@@ -169,10 +180,9 @@ function EditorContent(props: EditorContentProps) {
   }, [bpm, native, timeSignature, samples, varyingTempo]);
 
   useEffect(() => {
-    
     document.title = `${playbackStateToUnicode(playbackState)}${title} \u2013 Glissando Stems`;
   }, [playbackState, title]);
-
+  
   return (
     <>
       <EditorNavbar songData={props.song} form={form} />
@@ -180,7 +190,7 @@ function EditorContent(props: EditorContentProps) {
         <EditorTracks songName={title} form={form} data={props.stems} tempo={props.song.varyingTempo}/>
         <PeakMeter />
       </ContentContainer>
-      { /* <PlaybackStateChangeDetector currentState={native!.getPlaybackState()}/> */ }
+      <KeyboardHandler />
       { /* Waiting for Audio Session API */}
       { /* 'mediaSession' in navigator && <MediaSessionHandler songTitle={title} bandName={bandName!}/> */ }
     </>

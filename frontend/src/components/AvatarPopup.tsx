@@ -2,13 +2,17 @@ import { useCallback } from 'react';
 import { ClickAwayListener, Popper } from '@mui/base';
 import { styled } from '@mui/system';
 
-import { NormalButton } from './NavbarButton';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import LogoutIcon from '@mui/icons-material/Logout';
+
+import { NormalButton, YellowButton } from './NavbarButton';
 
 interface AvatarPopupProps {
-  onBlur?: () => void,
-  onLogout?: () => void,
-  open?: boolean,
-  anchorEl: HTMLElement | null,
+  onBlur?: () => void;
+  onPasswordChange?: () => void;
+  onLogout?: () => void;
+  open?: boolean;
+  anchorEl: HTMLElement | null;
   userFirstName: string;
   username: string;
   userEmail: string;
@@ -46,6 +50,7 @@ const PopupEmail = styled('span')(() => ({
 
 function AvatarPopup(props: AvatarPopupProps) {
   const { onBlur } = props;
+
   const handleClickAway = useCallback(() => {
     if (onBlur) {
       onBlur();
@@ -53,19 +58,23 @@ function AvatarPopup(props: AvatarPopupProps) {
   }, [onBlur]);
 
   return (
-    <Popper style={{ zIndex: 9999 }} open={!!props.open} anchorEl={props.anchorEl} placement="bottom-end">
-      <ClickAwayListener onClickAway={handleClickAway}>
-        <PopupFrame>
-          <PopupCell>
-            <PopupName>{props.userFirstName} ({props.username})</PopupName>
-            <PopupEmail>{props.userEmail}</PopupEmail>
-          </PopupCell>
-          <PopupCell>
-            <NormalButton onClick={props.onLogout}>Wyloguj</NormalButton>
-          </PopupCell>
-        </PopupFrame>
-      </ClickAwayListener>
-    </Popper>
+    <>
+      <Popper style={{ zIndex: 9999 }} open={!!props.open} anchorEl={props.anchorEl} placement="bottom-end">
+        <ClickAwayListener onClickAway={handleClickAway}>
+          <PopupFrame>
+            <PopupCell>
+              <PopupName>{props.userFirstName} ({props.username})</PopupName>
+              <PopupEmail>{props.userEmail}</PopupEmail>
+            </PopupCell>
+            <PopupCell>
+              <YellowButton onClick={props.onPasswordChange}><LockOutlinedIcon />&nbsp;Zmiana hasła</YellowButton>
+              <span style={{ height: 16 }} />
+              <NormalButton onClick={props.onLogout}><LogoutIcon />&nbsp;Wyloguj</NormalButton>
+            </PopupCell>
+          </PopupFrame>
+        </ClickAwayListener>
+      </Popper>
+    </>
   );
 }
 

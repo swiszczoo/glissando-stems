@@ -5,6 +5,7 @@ import AvatarImg from '../assets/avatar-dark.svg';
 import AvatarPopup from './AvatarPopup';
 
 interface AvatarProps {
+  onPasswordChange?: () => void;
   onLogout?: () => void,
 
   userFirstName: string;
@@ -41,6 +42,7 @@ function Avatar(props: AvatarProps) {
         userEmail={props.userEmail}
         username={props.username}
         onLogout={props.onLogout}
+        onPasswordChange={props.onPasswordChange}
         />
     </>
   );

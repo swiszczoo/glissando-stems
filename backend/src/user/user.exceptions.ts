@@ -11,4 +11,8 @@ export class UserExceptions {
   );
 
   public UNKNOWN_ERROR = new InternalServerErrorException('Unknown error');
+
+  public INVALID_CURRENT_PASSWORD = new UnauthorizedException(
+    'Invalid current password',
+  );
 }

@@ -7,6 +7,8 @@ import { User } from './entities/user.entity';
 
 import * as bcrypt from 'bcrypt';
 
+const bcryptSaltRounds = 12;
+
 @Injectable()
 export class UserService {
   constructor(
@@ -23,7 +25,7 @@ export class UserService {
       relations: ['band'],
     });
 
-    if (account == null) {
+    if (account === null) {
       return undefined;
     }
 
@@ -49,5 +51,34 @@ export class UserService {
       where: { id: bandId },
       relations: ['members'],
     });
+  }
+
+  async changeUserPassword(
+    userId: number,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    const account = await this.userRepository.findOneBy({
+      id: userId,
+    });
+
+    if (account === null) {
+      return false;
+    }
+
+    const passwordValid = await bcrypt.compare(oldPassword, account.password);
+    if (!passwordValid) {
+      return false;
+    }
+
+    const result = await this.userRepository.update(
+      {
+        id: userId,
+      },
+      {
+        password: await bcrypt.hash(newPassword, bcryptSaltRounds),
+      },
+    );
+    return result.affected > 0;
   }
 }

@@ -1,12 +1,13 @@
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
-export class LoginParamsDto {
+export class ChangePasswordRequestDto {
   @IsString()
   @IsNotEmpty()
-  login: string;
+  @MaxLength(64)
+  currentPassword: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
-  password: string;
+  newPassword: string;
 }
