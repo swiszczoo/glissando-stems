@@ -26,3 +26,67 @@ jobs:
         with:
           name: backend-dist
           path: ./backend/dist/
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install node deps
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-dist
+          path: ./frontend/dist/
+
+  build-emscripten:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend/native
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Setup emscripten SDK
+        uses: mymindstorm/setup-emsdk@v11
+
+      - name: Install cmake and ninja-build
+        run: sudo apt-get install -y cmake ninja-build
+      
+      - name: CMake configure
+        run: |
+          mkdir build
+          cd build
+          cmake --preset emscripten-deploy ..
+        
+      - name: CMake build
+        run: cmake --build ./build -j 2
+
+      - name: Copy dist files to separate directory
+        run: |
+          mkdir dist
+          cp build/glissando-editor* dist
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: native-dist
+          path: ./frontend/native/dist/
+      
