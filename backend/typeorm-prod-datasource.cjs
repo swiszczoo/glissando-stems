@@ -1,5 +1,6 @@
-import { DataSource } from 'typeorm';
-import 'dotenv/config';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { DataSource } = require('typeorm');
+require('dotenv/config');
 
 const AppDataSource = new DataSource({
   type: 'mariadb',
@@ -8,8 +9,10 @@ const AppDataSource = new DataSource({
   username: process.env.DATABASE_USER || 'root',
   password: process.env.DATABASE_PASSWORD || 'root',
   database: process.env.DATABASE_NAME || 'glissandostems',
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  migrations: ['./migrations/*{.ts,.js}'],
+  entities: ['./dist/**/*.entity{.ts,.js}'],
+  migrations: ['./dist/migrations/*{.ts,.js}'],
 });
 
-export default AppDataSource;
+module.exports = {
+  AppDataSource,
+};

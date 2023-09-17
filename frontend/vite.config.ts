@@ -19,7 +19,16 @@ export default defineConfig({
         target: 'http://backend-dev:3000',
         changeOrigin: true,
         secure: false,
-      }
+      },
     }
-  }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: 'static/assets/[hash:16][extname]',
+        chunkFileNames: 'static/assets/[hash:16].js',
+        entryFileNames: 'static/assets/[hash:16].js',
+      },
+    },
+  },
 })

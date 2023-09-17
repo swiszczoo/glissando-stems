@@ -1,0 +1,46 @@
+# This file is for local tests of production deployment
+# It uses build context instead of container registry
+
+version: '3.4'
+services:
+  backend:
+    container_name: glissando_backend
+    image: glissando_backend
+    build:
+      context: ./backend
+    environment:
+      FORCE_COLOR: 1
+      NODE_ENV: production
+      TZ: Europe/Warsaw
+    restart: unless-stopped
+    volumes:
+      - "./.env:/usr/src/app/.env"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/var/glissando/stems:/var/glissando/stems"
+    depends_on:
+      - mariadb
+
+  mariadb:
+    container_name: glissando_mariadb
+    command: --init-file /data/application/init.sql
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:3306:3306
+    volumes:
+      - ./mysql-init.sql:/data/application/init.sql:ro
+      - mariadb:/var/lib/mysql
+
+  nginx-proxy:
+    container_name: glissando_proxy
+    image: glissando_proxy
+    build:
+      context: ./nginx-proxy
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8080:8080
+
+volumes:
+  mariadb:

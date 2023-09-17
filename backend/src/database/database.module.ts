@@ -21,7 +21,7 @@ export class DatabaseModule {
         password: configService.get('DATABASE_PASSWORD'),
         database: configService.get('DATABASE_NAME'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        synchronize: configService.get('DATABASE_SYNC'),
+        synchronize: configService.get('DATABASE_SYNC') === 'true',
         logging:
           process.env.NODE_ENV !== 'production'
             ? ['query', 'info', 'warn', 'error']

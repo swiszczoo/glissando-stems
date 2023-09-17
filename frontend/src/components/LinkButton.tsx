@@ -1,30 +1,38 @@
-import PropTypes from 'prop-types'
 import {
     useLocation,
     useNavigate,
     useParams,
+    Location,
+    NavigateFunction,
+    Params,
+
   } from "react-router-dom";
 
 import GlissandoButton from './Button';
   
-const withRouter=<P extends object>(Component: React.ComponentType<P>) => {
-    function ComponentWithRouterProp(props: P) {
+const withRouter = <P extends LinkButtonProps>(Component: React.ComponentType<P>) => {
+    function ComponentWithRouterProp(props: Omit<P, 'router'>) {
         const location = useLocation();
         const navigate = useNavigate();
         const params = useParams();
 
-        return (
-        <Component
-            {...props}
-            router={{ location, navigate, params }}
-        />
-        );
+        const newProps = {
+          ...props,
+          router: { location, navigate, params },
+        } as P;
+
+        return <Component {...newProps} />;
     }
 
     return ComponentWithRouterProp;
 }
 
-const LinkButton = (props) => {
+interface LinkButtonProps extends React.PropsWithChildren {
+  router: { location: Location, navigate: NavigateFunction, params: Readonly<Params<string>> }
+  to: string;
+}
+
+const LinkButton = (props: React.ButtonHTMLAttributes<HTMLButtonElement> & LinkButtonProps) => {
   const {
     router,
     to,
@@ -36,18 +44,13 @@ const LinkButton = (props) => {
   return (
     <GlissandoButton
       {...rest} // `children` is just another prop!
-      onClick={(event) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick && onClick(event);
         router.navigate(to);
       }}
     />
   );
 }
-
-LinkButton.propTypes = {
-  to: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired
-};
 
 const LinkButtonWithRouter = withRouter(LinkButton);
 

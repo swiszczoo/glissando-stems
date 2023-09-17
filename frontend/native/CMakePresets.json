@@ -27,7 +27,7 @@
       "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "GS_WASM_PATH_PREFIX": ""
+        "GS_WASM_PATH_PREFIX": "/static/wasm/"
       },
       "binaryDir": "${sourceDir}/build"
     }

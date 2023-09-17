@@ -47,12 +47,14 @@ services:
   
   mariadb:
     container_name: glissando_mariadb_dev
+    command: --init-file /data/application/init.sql
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root
     ports:
       - 3306:3306
     volumes:
+      - ./mysql-init.sql:/data/application/init.sql:ro
       - mariadb:/var/lib/mysql
   
   phpmyadmin:

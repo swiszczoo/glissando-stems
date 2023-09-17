@@ -48,13 +48,13 @@ import { Config } from '../config';
     ScheduleModule.forRoot(),
     S3StorageModule.forRootAsync({
       useFactory: (configService: ConfigService<Config>) => ({
-        enabled: configService.get('S3_DRIVER_ENABLED'),
+        enabled: configService.get('S3_DRIVER_ENABLED') === 'true',
         createBucketOnStart: configService.get('S3_CREATE_BUCKET_ON_START'),
         accessKey: configService.get('S3_ACCESS_KEY_ID'),
         secretKey: configService.get('S3_SECRET_ACCESS_KEY'),
         bucketName: configService.get('S3_BUCKET_NAME'),
         endpointUrl: configService.get('S3_ENDPOINT_URL'),
-        forcePathStyle: configService.get('S3_FORCE_PATH_STYLE'),
+        forcePathStyle: configService.get('S3_FORCE_PATH_STYLE') === 'true',
       }),
       inject: [ConfigService],
     }),
