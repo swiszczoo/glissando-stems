@@ -4,6 +4,7 @@ env:
   REGISTRY: ghcr.io
 jobs:
   build-backend:
+    name: Build backend
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,6 +32,7 @@ jobs:
           retention-days: 3
 
   build-frontend:
+    name: Build frontend
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -58,6 +60,7 @@ jobs:
           retention-days: 3
 
   build-emscripten:
+    name: Compile C++ to WASM
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -97,7 +100,8 @@ jobs:
     
   deploy-backend:
     #if: github.ref == 'refs/heads/master'
-    needs: [build-backend]
+    name: Deploy backend container to GHCR
+    needs: [build-backend, build-frontend, build-emscripten]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -121,7 +125,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
+          username: swiszczoo
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
@@ -137,4 +141,71 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-        
+      
+  deploy-proxy:
+    #if: github.ref == 'refs/heads/master'
+    name: Deploy proxy container to GHCR
+    needs: [build-backend, build-frontend, build-emscripten]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: ./nginx-proxy
+    env:
+      IMAGE_NAME: swiszczoo/glissando-proxy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: frontend-dist
+          path: ./nginx-proxy/frontend-dist
+
+      - name: Download native artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: native-dist
+          path: ./nginx-proxy/native-dist
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: swiszczoo
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Docker build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nginx-proxy
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+  
+  clean-ghcr:
+    #if: github.ref == 'refs/heads/master'
+    needs: [deploy-backend, deploy-proxy]
+    name: Delete old unused container images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clean up backend images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: glissando-*
+          cut-off: 1 hour ago UTC
+          timestamp-to-use: updated_at
+          account-type: personal
+          keep-at-least: 1
+          skip-tags: latest
+          token: ${{ secrets.PAT }}
+
