@@ -1,0 +1,211 @@
+name: Build and deploy Glissando Stems
+on: [push]
+env:
+  REGISTRY: ghcr.io
+jobs:
+  build-backend:
+    name: Build backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install node deps
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-dist
+          path: ./backend/dist/
+          retention-days: 3
+
+  build-frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install node deps
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-dist
+          path: ./frontend/dist/
+          retention-days: 3
+
+  build-emscripten:
+    name: Compile C++ to WASM
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend/native
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Setup emscripten SDK
+        uses: mymindstorm/setup-emsdk@v11
+
+      - name: Install cmake and ninja-build
+        run: sudo apt-get install -y cmake ninja-build
+      
+      - name: CMake configure
+        run: |
+          mkdir build
+          cd build
+          cmake --preset emscripten-deploy ..
+        
+      - name: CMake build
+        run: cmake --build ./build -j 2
+
+      - name: Copy dist files to separate directory
+        run: |
+          mkdir dist
+          cp build/glissando-editor* dist
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: native-dist
+          path: ./frontend/native/dist/
+          retention-days: 3
+    
+  deploy-backend:
+    if: github.ref == 'refs/heads/master'
+    name: Deploy backend container to GHCR
+    needs: [build-backend, build-frontend, build-emscripten]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: ./backend
+    env:
+      IMAGE_NAME: swiszczoo/glissando-backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-dist
+          path: ./backend/dist/
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: swiszczoo
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Docker build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      
+  deploy-proxy:
+    if: github.ref == 'refs/heads/master'
+    name: Deploy proxy container to GHCR
+    needs: [build-backend, build-frontend, build-emscripten]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: ./nginx-proxy
+    env:
+      IMAGE_NAME: swiszczoo/glissando-proxy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: frontend-dist
+          path: ./nginx-proxy/frontend-dist
+
+      - name: Download native artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: native-dist
+          path: ./nginx-proxy/native-dist
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: swiszczoo
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Docker build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nginx-proxy
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+  
+  clean-ghcr:
+    if: github.ref == 'refs/heads/master'
+    needs: [deploy-backend, deploy-proxy]
+    name: Delete old unused container images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clean up old images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: glissando-*
+          cut-off: 1 minute ago UTC
+          timestamp-to-use: updated_at
+          account-type: personal
+          keep-at-least: 1
+          skip-tags: latest
+          token: ${{ secrets.PAT }}
+
