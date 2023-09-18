@@ -54,6 +54,7 @@ import { Config } from '../config';
         secretKey: configService.get('S3_SECRET_ACCESS_KEY'),
         bucketName: configService.get('S3_BUCKET_NAME'),
         endpointUrl: configService.get('S3_ENDPOINT_URL'),
+        region: configService.get('S3_REGION'),
         forcePathStyle: configService.get('S3_FORCE_PATH_STYLE') === 'true',
       }),
       inject: [ConfigService],

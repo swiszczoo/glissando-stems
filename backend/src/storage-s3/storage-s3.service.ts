@@ -85,8 +85,8 @@ export class S3StorageService implements OnModuleInit {
         secretAccessKey: this.options.secretKey,
       },
       endpoint: this.options.endpointUrl,
-      region: 'not-used',
-      forcePathStyle: true,
+      region: this.options.region,
+      forcePathStyle: this.options.forcePathStyle,
       retryMode: 'standard',
     });
 
@@ -120,6 +120,7 @@ export class S3StorageService implements OnModuleInit {
         Body: fstream,
         ContentType: mimeType,
         ContentDisposition: 'attachment',
+        ACL: 'public-read',
       },
       leavePartsOnError: true,
     });

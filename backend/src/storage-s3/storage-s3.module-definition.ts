@@ -5,6 +5,7 @@ export interface S3StorageModuleOptions {
   accessKey: string;
   secretKey: string;
   endpointUrl: string;
+  region: string;
   createBucketOnStart?: boolean;
   bucketName: string;
   forcePathStyle?: boolean;

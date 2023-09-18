@@ -70,8 +70,7 @@ export class StemService implements OnModuleInit {
     stemName: string,
     stemPath: string,
   ): Promise<void> {
-    const normalKey = `${stemName}.oga`;
-    const hqKey = `${stemName}.flac`;
+    const [normalKey, hqKey] = this.getStemLocations(stemName);
     const normalPath = `${stemPath}.oga`;
     const hqPath = `${stemPath}.flac`;
 
@@ -113,6 +112,18 @@ export class StemService implements OnModuleInit {
 
       throw e;
     }
+  }
+
+  private getStemLocations(stemName: string): [string, string] {
+    const normalPrefix = this.s3Service.isEnabled()
+      ? this.configService.get('S3_OGG_KEY_PREFIX')
+      : '';
+
+    const hqPrefix = this.s3Service.isEnabled()
+      ? this.configService.get('S3_FLAC_KEY_PREFIX')
+      : '';
+
+    return [`${normalPrefix}${stemName}.oga`, `${hqPrefix}${stemName}.flac`];
   }
 
   private runStemConversion(
@@ -218,8 +229,9 @@ export class StemService implements OnModuleInit {
     newStem.status = StemStatus.PROCESSING;
     newStem.processingHostname = hostname;
     newStem.processingPid = pid;
-    newStem.location = `${stemName}.oga`;
-    newStem.hqLocation = `${stemName}.flac`;
+    const [location, hqLocation] = this.getStemLocations(stemName);
+    newStem.location = location;
+    newStem.hqLocation = hqLocation;
 
     await this.stemRepository.save(newStem);
 

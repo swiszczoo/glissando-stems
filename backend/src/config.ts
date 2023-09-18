@@ -16,7 +16,10 @@ export interface Config {
   S3_BUCKET_NAME: string;
   S3_CREATE_BUCKET_ON_START: boolean;
   S3_ENDPOINT_URL: string;
+  S3_REGION: string;
   S3_FORCE_PATH_STYLE: boolean;
+  S3_OGG_KEY_PREFIX: string;
+  S3_FLAC_KEY_PREFIX: string;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -37,5 +40,8 @@ export const DEFAULT_CONFIG: Config = {
   S3_BUCKET_NAME: '',
   S3_CREATE_BUCKET_ON_START: false,
   S3_ENDPOINT_URL: '',
+  S3_REGION: 'not-used',
   S3_FORCE_PATH_STYLE: false,
+  S3_OGG_KEY_PREFIX: '',
+  S3_FLAC_KEY_PREFIX: '',
 };
