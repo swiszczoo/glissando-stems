@@ -119,6 +119,7 @@ export class S3StorageService implements OnModuleInit {
         Key: key,
         Body: fstream,
         ContentType: mimeType,
+        CacheControl: 'max-age=31536000',
         ContentDisposition: 'attachment',
         ACL: 'public-read',
       },

@@ -9,5 +9,6 @@ WORKDIR /usr/src/app
 COPY .env package.json package-lock.json typeorm-prod-datasource.cjs /usr/src/app/
 RUN npm install --omit=dev
 COPY dist /usr/src/app/dist
+COPY scripts /usr/src/app/scripts
 
 CMD [ "/bin/sh", "-c", "npm run migration:run:prod; npm run start:prod" ]
