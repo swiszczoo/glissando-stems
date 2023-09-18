@@ -74,8 +74,18 @@ void AudioWorklet::callback_audio_worklet_processor_created(
     // Setup audio path
     EM_ASM({
         const audioCtx = emscriptenGetAudioObject($1);
+        const clipperNode = new WaveShaperNode(audioCtx, {
+            curve: new Float32Array([-1, 1]),
+        });
+        // ^----- Apply clipping
+        const gainNode = new GainNode(audioCtx);
+        gainNode.gain.setValueAtTime(0.85, audioCtx.currentTime); 
+        // ^---- Windows mixer tries to apply its own limiting,
+        // especially if upsampling. Give him a bit of a headroom...
 
-        emscriptenGetAudioObject($0).connect(audioCtx.destination);
+        emscriptenGetAudioObject($0).connect(clipperNode);
+        clipperNode.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
 
         window.audioContext = audioCtx;
         console.info(`Output sample rate is ${window.audioContext.sampleRate} Hz`);

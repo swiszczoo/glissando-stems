@@ -38,7 +38,8 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE cpp-base64)
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE lodepng)
 
 string(REPLACE "/" "\\/" GS_WASM_PATH_PREFIX ${GS_WASM_PATH_PREFIX})
+string(TIMESTAMP CURRENT_TIMESTAMP "%s")
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD 
     COMMAND sleep 1 # It looks like there's a race condition that confuses vite dev server
-    COMMAND sed -i'' "\"s/\\(['\\\"]\\)\\(glissando-editor\\.\\)/\\1${GS_WASM_PATH_PREFIX}\\2/g\"" ${CMAKE_BINARY_DIR}/glissando-editor.js)
+    COMMAND sed -i'' "\"s/\\(['\\\"]\\)\\(glissando-editor\\.[a-z\\.]*\\)/\\1${GS_WASM_PATH_PREFIX}\\2\\?t=${CURRENT_TIMESTAMP}/g\"" ${CMAKE_BINARY_DIR}/glissando-editor.js)
